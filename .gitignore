@@ -1,0 +1,7 @@
+/target
+*.md
+tmp
+.idea
+.DS_Store
+
+.env
