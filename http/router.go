@@ -3,20 +3,27 @@ package http
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/lekovv/go-crud-simple/controllers"
+	"github.com/lekovv/go-crud-simple/layers"
 )
 
 func RegisterRoutes(app *fiber.App) {
-	userController := controllers.NewUserController()
+	appContainer := layers.NewAppContainer()
 
 	api := app.Group("/api")
+
+	setupUserRoutes(api, appContainer.UserController)
+
+	app.Get("/health", healthHandler)
+}
+
+func setupUserRoutes(api fiber.Router, controller *controllers.UserController) {
 	userRoutes := api.Group("/user")
+	userRoutes.Post("/create-user", controller.CreateUser)
+}
 
-	userRoutes.Post("/create-user", userController.CreateUser)
-
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.Status(200).JSON(fiber.Map{
-			"status":  "ok",
-			"message": "A simple CRUD project on PostgreSQL using Golang REST API",
-		})
+func healthHandler(c *fiber.Ctx) error {
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "ok",
+		"message": "A simple CRUD project on PostgreSQL using Golang REST API",
 	})
 }

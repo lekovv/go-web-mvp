@@ -5,9 +5,13 @@ import (
 	"github.com/lekovv/go-crud-simple/user/model"
 )
 
+type UserRepoInterface interface {
+	CreateUser(user *model.User) error
+}
+
 type UserRepository struct{}
 
-func NewRepository() *UserRepository {
+func NewUserRepository() UserRepoInterface {
 	return &UserRepository{}
 }
 

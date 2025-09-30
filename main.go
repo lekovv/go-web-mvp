@@ -19,6 +19,8 @@ func main() {
 
 	app := fiber.New()
 	app.Use(logger.New())
+
 	http.RegisterRoutes(app)
+	
 	log.Fatal(app.Listen(":" + env.ServerPort))
 }

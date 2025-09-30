@@ -5,13 +5,17 @@ import (
 	"github.com/lekovv/go-crud-simple/user/repository"
 )
 
-type UserService struct {
-	repo *repository.UserRepository
+type UserServiceInterface interface {
+	CreateUser(payload *model.CreateUserDTO) (*model.User, error)
 }
 
-func NewUserService() *UserService {
+type UserService struct {
+	repo repository.UserRepoInterface
+}
+
+func NewUserService(repo repository.UserRepoInterface) UserServiceInterface {
 	return &UserService{
-		repo: repository.NewRepository(),
+		repo: repo,
 	}
 }
 
