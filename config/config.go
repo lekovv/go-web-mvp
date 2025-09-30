@@ -3,7 +3,7 @@ package config
 import "github.com/spf13/viper"
 
 type Env struct {
-	ServerPort string `envconfig:"SERVER_PORT"`
+	ServerPort string `mapstructure:"SERVER_PORT"`
 	DBHost     string `mapstructure:"DB_HOST"`
 	DBPort     string `mapstructure:"DB_PORT"`
 	DBUser     string `mapstructure:"DB_USER"`
