@@ -9,6 +9,7 @@ import (
 	"github.com/lekovv/go-crud-simple/db"
 	"github.com/lekovv/go-crud-simple/http"
 	"github.com/lekovv/go-crud-simple/layers"
+	"github.com/lekovv/go-crud-simple/middleware"
 )
 
 func main() {
@@ -20,9 +21,10 @@ func main() {
 
 	app := fiber.New()
 	app.Use(logger.New())
+	app.Use(middleware.Recover())
+	app.Use(middleware.CORS(&env))
 
 	appContainer := layers.NewAppContainer(database.DB)
-
 	http.RegisterRoutes(app, appContainer)
 	log.Fatal(app.Listen(":" + env.ServerPort))
 }
