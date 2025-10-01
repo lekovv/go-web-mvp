@@ -23,7 +23,7 @@ func (s *UserService) CreateUser(payload *model.CreateUserDTO) (*model.User, err
 	newUser := &model.User{
 		FirstName: payload.FirstName,
 		LastName:  payload.LastName,
-		IsActive:  payload.IsActive,
+		IsActive:  *payload.IsActive,
 	}
 
 	if err := s.repo.CreateUser(newUser); err != nil {
