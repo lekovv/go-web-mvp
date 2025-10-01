@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/lekovv/go-crud-simple/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -32,6 +35,27 @@ func ConnectDB(env *config.Env) *Database {
 	db.Logger = logger.Default.LogMode(logger.Info)
 
 	fmt.Println("Connected to database")
+
+	migrateURL := "file://migrations"
+	dbURL := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s&timezone=%s",
+		env.DBUser,
+		env.DBPassword,
+		env.DBHost,
+		env.DBPort,
+		env.DBName,
+		env.DBSSLMode,
+		env.DBTimezone,
+	)
+
+	m, err := migrate.New(migrateURL, dbURL)
+	if err != nil {
+		log.Fatal("Failed to initialize migrations", err.Error())
+	}
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("Failed to apply migrations", err.Error())
+	}
+	fmt.Println("Applied migrations successfully")
 
 	return &Database{DB: db}
 }

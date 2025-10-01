@@ -14,7 +14,7 @@ type UserRepository struct {
 }
 
 func NewUserRepository(db *gorm.DB) UserRepoInterface {
-	return &UserRepository{}
+	return &UserRepository{db}
 }
 
 func (r *UserRepository) CreateUser(user *model.User) error {
