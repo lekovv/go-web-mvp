@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/lekovv/go-crud-simple/user/model"
 	"github.com/lekovv/go-crud-simple/user/service"
 	"github.com/lekovv/go-crud-simple/utils"
+	"gorm.io/gorm"
 )
 
 type UserController struct {
@@ -22,7 +24,8 @@ func (ctrl *UserController) CreateUser(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status": "fail", "message": err.Error(),
+			"status":  "fail",
+			"message": err.Error(),
 		})
 	}
 
@@ -34,11 +37,36 @@ func (ctrl *UserController) CreateUser(c *fiber.Ctx) error {
 	newUser, err := ctrl.service.CreateUser(payload)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status": "error", "message": err.Error(),
+			"status":  "error",
+			"message": err.Error(),
 		})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"status": "success", "data": fiber.Map{"value": newUser},
+		"status": "success",
+		"data":   fiber.Map{"value": newUser},
+	})
+}
+
+func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
+	idParam := c.Query("id")
+	id, _ := uuid.Parse(idParam)
+
+	user, err := ctrl.service.GetUserById(id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "User Not Found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   fiber.Map{"value": user},
 	})
 }

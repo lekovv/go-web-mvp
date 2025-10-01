@@ -1,12 +1,14 @@
 package service
 
 import (
+	"github.com/google/uuid"
 	"github.com/lekovv/go-crud-simple/user/model"
 	"github.com/lekovv/go-crud-simple/user/repository"
 )
 
 type UserServiceInterface interface {
 	CreateUser(payload *model.CreateUserDTO) (*model.User, error)
+	GetUserById(id uuid.UUID) (*model.User, error)
 }
 
 type UserService struct {
@@ -31,4 +33,13 @@ func (s *UserService) CreateUser(payload *model.CreateUserDTO) (*model.User, err
 	}
 
 	return newUser, nil
+}
+
+func (s *UserService) GetUserById(id uuid.UUID) (*model.User, error) {
+	var user model.User
+
+	if err := s.repo.GetUserById(id, &user); err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
