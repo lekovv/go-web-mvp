@@ -9,6 +9,7 @@ import (
 type UserServiceInterface interface {
 	CreateUser(payload *model.CreateUserDTO) (*model.User, error)
 	GetUserById(id uuid.UUID) (*model.User, error)
+	UpdateUser(id uuid.UUID, payload *model.UpdateUserDTO) (*model.User, error)
 }
 
 type UserService struct {
@@ -42,4 +43,12 @@ func (s *UserService) GetUserById(id uuid.UUID) (*model.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (s *UserService) UpdateUser(id uuid.UUID, payload *model.UpdateUserDTO) (*model.User, error) {
+	if err := s.repo.UpdateUser(id, payload); err != nil {
+		return nil, err
+	}
+
+	return s.GetUserById(id)
 }

@@ -70,3 +70,41 @@ func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
 		"data":   fiber.Map{"value": user},
 	})
 }
+
+func (ctrl *UserController) UpdateUser(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, _ := uuid.Parse(idParam)
+
+	var payload *model.UpdateUserDTO
+
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
+
+	errors := utils.ValidateStruct(payload)
+	if errors != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errors)
+	}
+
+	updatedUser, err := ctrl.service.UpdateUser(id, payload)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "User Not Found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   fiber.Map{"value": updatedUser},
+	})
+}

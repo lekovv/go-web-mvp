@@ -9,6 +9,7 @@ import (
 type UserRepoInterface interface {
 	CreateUser(user *model.User) error
 	GetUserById(id uuid.UUID, user *model.User) error
+	UpdateUser(id uuid.UUID, updates *model.UpdateUserDTO) error
 }
 
 type UserRepository struct {
@@ -26,5 +27,10 @@ func (r *UserRepository) CreateUser(user *model.User) error {
 
 func (r *UserRepository) GetUserById(id uuid.UUID, user *model.User) error {
 	result := r.db.First(user, "id = ?", id)
+	return result.Error
+}
+
+func (r *UserRepository) UpdateUser(id uuid.UUID, updates *model.UpdateUserDTO) error {
+	result := r.db.Model(&model.User{}).Where("id = ?", id).Updates(updates)
 	return result.Error
 }

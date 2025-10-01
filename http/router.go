@@ -18,6 +18,7 @@ func setupUserRoutes(api fiber.Router, controller *controllers.UserController) {
 	userRoutes := api.Group("/user")
 	userRoutes.Post("/create-user", controller.CreateUser)
 	userRoutes.Get("/get-user-by-id", controller.GetUserById)
+	userRoutes.Patch("/update-user/:id", controller.UpdateUser)
 }
 
 func healthHandler(c *fiber.Ctx) error {
