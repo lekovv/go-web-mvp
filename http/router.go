@@ -6,9 +6,7 @@ import (
 	"github.com/lekovv/go-crud-simple/layers"
 )
 
-func RegisterRoutes(app *fiber.App) {
-	appContainer := layers.NewAppContainer()
-
+func RegisterRoutes(app *fiber.App, appContainer *layers.AppContainer) {
 	api := app.Group("/api")
 
 	setupUserRoutes(api, appContainer.UserController)

@@ -8,6 +8,7 @@ import (
 	"github.com/lekovv/go-crud-simple/config"
 	"github.com/lekovv/go-crud-simple/db"
 	"github.com/lekovv/go-crud-simple/http"
+	"github.com/lekovv/go-crud-simple/layers"
 )
 
 func main() {
@@ -15,12 +16,13 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to load config", err)
 	}
-	db.ConnectDB(&env)
+	database := db.ConnectDB(&env)
 
 	app := fiber.New()
 	app.Use(logger.New())
 
-	http.RegisterRoutes(app)
-	
+	appContainer := layers.NewAppContainer(database.DB)
+
+	http.RegisterRoutes(app, appContainer)
 	log.Fatal(app.Listen(":" + env.ServerPort))
 }

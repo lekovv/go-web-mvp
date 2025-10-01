@@ -10,10 +10,11 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
+type Database struct {
+	DB *gorm.DB
+}
 
-func ConnectDB(env *config.Env) {
-	var err error
+func ConnectDB(env *config.Env) *Database {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
 		env.DBHost,
 		env.DBUser,
@@ -23,12 +24,14 @@ func ConnectDB(env *config.Env) {
 		env.DBSSLMode,
 		env.DBTimezone)
 
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database")
 	}
 
-	DB.Logger = logger.Default.LogMode(logger.Info)
+	db.Logger = logger.Default.LogMode(logger.Info)
 
 	fmt.Println("Connected to database")
+
+	return &Database{DB: db}
 }
