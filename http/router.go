@@ -19,6 +19,7 @@ func setupUserRoutes(api fiber.Router, controller *controllers.UserController) {
 	userRoutes.Post("/create-user", controller.CreateUser)
 	userRoutes.Get("/get-user-by-id", controller.GetUserById)
 	userRoutes.Patch("/update-user/:id", controller.UpdateUser)
+	userRoutes.Delete("/delete-user/:id", controller.DeleteUser)
 }
 
 func healthHandler(c *fiber.Ctx) error {

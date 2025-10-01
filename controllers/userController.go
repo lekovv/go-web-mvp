@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/lekovv/go-crud-simple/user/model"
@@ -50,7 +52,13 @@ func (ctrl *UserController) CreateUser(c *fiber.Ctx) error {
 
 func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
 	idParam := c.Query("id")
-	id, _ := uuid.Parse(idParam)
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
 
 	user, err := ctrl.service.GetUserById(id)
 	if err != nil {
@@ -73,7 +81,13 @@ func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
 
 func (ctrl *UserController) UpdateUser(c *fiber.Ctx) error {
 	idParam := c.Params("id")
-	id, _ := uuid.Parse(idParam)
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
 
 	var payload *model.UpdateUserDTO
 
@@ -106,5 +120,37 @@ func (ctrl *UserController) UpdateUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   fiber.Map{"value": updatedUser},
+	})
+}
+
+func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
+
+	err = ctrl.service.DeleteUser(id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "User Not Found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data": fiber.Map{
+			"value": fmt.Sprintf("Delete User with id: '%s' Success", id.String()),
+		},
 	})
 }
