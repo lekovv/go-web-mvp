@@ -23,6 +23,7 @@ func main() {
 	app.Use(logger.New())
 	app.Use(middleware.Recover())
 	app.Use(middleware.CORS(&env))
+	app.Use(middleware.RateLimiter())
 
 	appContainer := layers.NewAppContainer(database.DB)
 	http.RegisterRoutes(app, appContainer)
