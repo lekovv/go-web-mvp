@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/lekovv/go-crud-simple/config"
+	"github.com/lekovv/go-web-mvp/config"
 )
 
 func CORS(origin *config.Env) fiber.Handler {

@@ -1,4 +1,4 @@
-module github.com/lekovv/go-crud-simple
+module github.com/lekovv/go-web-mvp
 
 go 1.25.1
 

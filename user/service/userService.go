@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"github.com/lekovv/go-crud-simple/user/model"
-	"github.com/lekovv/go-crud-simple/user/repository"
+	"github.com/lekovv/go-web-mvp/user/model"
+	"github.com/lekovv/go-web-mvp/user/repository"
 )
 
 type UserServiceInterface interface {

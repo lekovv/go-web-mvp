@@ -5,9 +5,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/lekovv/go-crud-simple/user/model"
-	"github.com/lekovv/go-crud-simple/user/service"
-	"github.com/lekovv/go-crud-simple/utils"
+	"github.com/lekovv/go-web-mvp/user/model"
+	"github.com/lekovv/go-web-mvp/user/service"
+	"github.com/lekovv/go-web-mvp/utils"
 	"gorm.io/gorm"
 )
 

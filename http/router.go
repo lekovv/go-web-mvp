@@ -2,8 +2,8 @@ package http
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/lekovv/go-crud-simple/controllers"
-	"github.com/lekovv/go-crud-simple/layers"
+	"github.com/lekovv/go-web-mvp/controllers"
+	"github.com/lekovv/go-web-mvp/layers"
 )
 
 func RegisterRoutes(app *fiber.App, appContainer *layers.AppContainer) {

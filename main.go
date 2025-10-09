@@ -5,11 +5,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/lekovv/go-crud-simple/config"
-	"github.com/lekovv/go-crud-simple/db"
-	"github.com/lekovv/go-crud-simple/http"
-	"github.com/lekovv/go-crud-simple/layers"
-	"github.com/lekovv/go-crud-simple/middleware"
+	"github.com/lekovv/go-web-mvp/config"
+	"github.com/lekovv/go-web-mvp/db"
+	"github.com/lekovv/go-web-mvp/http"
+	"github.com/lekovv/go-web-mvp/layers"
+	"github.com/lekovv/go-web-mvp/middleware"
 )
 
 func main() {

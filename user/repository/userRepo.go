@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/google/uuid"
-	"github.com/lekovv/go-crud-simple/user/model"
+	"github.com/lekovv/go-web-mvp/user/model"
 	"gorm.io/gorm"
 )
 

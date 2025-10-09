@@ -1,9 +1,9 @@
 package layers
 
 import (
-	"github.com/lekovv/go-crud-simple/controllers"
-	"github.com/lekovv/go-crud-simple/user/repository"
-	"github.com/lekovv/go-crud-simple/user/service"
+	"github.com/lekovv/go-web-mvp/controllers"
+	"github.com/lekovv/go-web-mvp/user/repository"
+	"github.com/lekovv/go-web-mvp/user/service"
 	"gorm.io/gorm"
 )
 
