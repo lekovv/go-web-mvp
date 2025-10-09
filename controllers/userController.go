@@ -5,8 +5,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/lekovv/go-web-mvp/user/model"
-	"github.com/lekovv/go-web-mvp/user/service"
+	"github.com/lekovv/go-web-mvp/models"
+	"github.com/lekovv/go-web-mvp/service"
 	"github.com/lekovv/go-web-mvp/utils"
 	"gorm.io/gorm"
 )
@@ -22,7 +22,7 @@ func NewUserController(service service.UserServiceInterface) *UserController {
 }
 
 func (ctrl *UserController) CreateUser(c *fiber.Ctx) error {
-	var payload *model.CreateUserDTO
+	var payload *models.CreateUserDTO
 
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -89,7 +89,7 @@ func (ctrl *UserController) UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	var payload *model.UpdateUserDTO
+	var payload *models.UpdateUserDTO
 
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

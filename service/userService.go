@@ -2,14 +2,14 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"github.com/lekovv/go-web-mvp/user/model"
-	"github.com/lekovv/go-web-mvp/user/repository"
+	"github.com/lekovv/go-web-mvp/models"
+	"github.com/lekovv/go-web-mvp/repository"
 )
 
 type UserServiceInterface interface {
-	CreateUser(payload *model.CreateUserDTO) (*model.User, error)
-	GetUserById(id uuid.UUID) (*model.User, error)
-	UpdateUser(id uuid.UUID, payload *model.UpdateUserDTO) (*model.User, error)
+	CreateUser(payload *models.CreateUserDTO) (*models.User, error)
+	GetUserById(id uuid.UUID) (*models.User, error)
+	UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.User, error)
 	DeleteUser(id uuid.UUID) error
 }
 
@@ -23,8 +23,8 @@ func NewUserService(repo repository.UserRepoInterface) UserServiceInterface {
 	}
 }
 
-func (s *UserService) CreateUser(payload *model.CreateUserDTO) (*model.User, error) {
-	newUser := &model.User{
+func (s *UserService) CreateUser(payload *models.CreateUserDTO) (*models.User, error) {
+	newUser := &models.User{
 		FirstName: payload.FirstName,
 		LastName:  payload.LastName,
 		IsActive:  *payload.IsActive,
@@ -37,8 +37,8 @@ func (s *UserService) CreateUser(payload *model.CreateUserDTO) (*model.User, err
 	return newUser, nil
 }
 
-func (s *UserService) GetUserById(id uuid.UUID) (*model.User, error) {
-	var user model.User
+func (s *UserService) GetUserById(id uuid.UUID) (*models.User, error) {
+	var user models.User
 
 	if err := s.repo.GetUserById(id, &user); err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (s *UserService) GetUserById(id uuid.UUID) (*model.User, error) {
 	return &user, nil
 }
 
-func (s *UserService) UpdateUser(id uuid.UUID, payload *model.UpdateUserDTO) (*model.User, error) {
+func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.User, error) {
 	if err := s.repo.UpdateUser(id, payload); err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (s *UserService) UpdateUser(id uuid.UUID, payload *model.UpdateUserDTO) (*m
 }
 
 func (s *UserService) DeleteUser(id uuid.UUID) error {
-	var user model.User
+	var user models.User
 
 	if err := s.repo.DeleteUser(id, &user); err != nil {
 		return err

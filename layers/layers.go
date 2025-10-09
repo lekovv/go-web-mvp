@@ -2,8 +2,8 @@ package layers
 
 import (
 	"github.com/lekovv/go-web-mvp/controllers"
-	"github.com/lekovv/go-web-mvp/user/repository"
-	"github.com/lekovv/go-web-mvp/user/service"
+	"github.com/lekovv/go-web-mvp/repository"
+	"github.com/lekovv/go-web-mvp/service"
 	"gorm.io/gorm"
 )
 
