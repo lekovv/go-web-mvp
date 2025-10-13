@@ -11,6 +11,8 @@ type Env struct {
 	DBSSLMode   string `mapstructure:"DB_SSLMODE"`
 	DBTimezone  string `mapstructure:"DB_TIMEZONE"`
 	DBName      string `mapstructure:"DB_NAME"`
+	JWTSecret   string `mapstructure:"JWT_SECRET"`
+	JWTExpire   int    `mapstructure:"JWT_EXPIRE_HOURS"`
 	FrontendUrl string `mapstructure:"FRONTEND_URL"`
 }
 
