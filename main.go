@@ -26,6 +26,6 @@ func main() {
 	app.Use(middleware.RateLimiter())
 
 	appContainer := layers.NewAppContainer(database.DB, &env)
-	http.RegisterRoutes(app, appContainer)
+	http.RegisterRoutes(app, appContainer, &env)
 	log.Fatal(app.Listen(":" + env.ServerPort))
 }

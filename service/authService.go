@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/lekovv/go-web-mvp/models"
 	"github.com/lekovv/go-web-mvp/repository"
 	"github.com/lekovv/go-web-mvp/utils"
@@ -11,6 +12,8 @@ import (
 
 type AuthServiceInterface interface {
 	RegisterUser(payload *models.UserRegistrationDTO) (*models.AuthResponse, error)
+	Login(payload *models.LoginDTO) (*models.AuthResponse, error)
+	Logout(userId uuid.UUID) error
 }
 
 type AuthService struct {
@@ -93,10 +96,27 @@ func (s *AuthService) RegisterUser(payload *models.UserRegistrationDTO) (*models
 		return nil, err
 	}
 
+	return &models.AuthResponse{User: createdUser}, nil
+}
+
+func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, error) {
+	user, err := s.userRepo.GetUserByEmail(payload.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	if !user.IsActive {
+		return nil, errors.New("user is not active")
+	}
+
+	if !utils.CheckPasswordHash(payload.Password, user.PasswordHash) {
+		return nil, errors.New("invalid password")
+	}
+
 	token, err := utils.GenerateJWT(
-		createdUser.ID,
-		createdUser.Email,
-		createdUser.RoleID,
+		user.ID,
+		user.Email,
+		user.RoleID,
 		s.jwtSecret,
 		s.jwtExpire,
 	)
@@ -104,8 +124,9 @@ func (s *AuthService) RegisterUser(payload *models.UserRegistrationDTO) (*models
 		return nil, err
 	}
 
-	return &models.AuthResponse{
-		Token: token,
-		User:  *createdUser,
-	}, nil
+	return &models.AuthResponse{Token: &token}, nil
+}
+
+func (s *AuthService) Logout(userId uuid.UUID) error {
+	return nil
 }
