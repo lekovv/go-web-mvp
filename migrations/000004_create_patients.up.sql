@@ -2,7 +2,6 @@ CREATE TABLE patients (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL UNIQUE,
     birth_date DATE NOT NULL,
-    gender VARCHAR(10) NOT NULL CHECK (gender IN ('male', 'female')),
     created TIMESTAMP NOT NULL,
     updated TIMESTAMP NOT NULL,
     CONSTRAINT fk_patients_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

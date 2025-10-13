@@ -10,9 +10,9 @@ import (
 	"github.com/lekovv/go-web-mvp/config"
 )
 
-func CORS(origin *config.Env) fiber.Handler {
+func CORS(config *config.Env) fiber.Handler {
 	return cors.New(cors.Config{
-		AllowOrigins:     origin.FrontendUrl,
+		AllowOrigins:     config.FrontendUrl,
 		AllowHeaders:     "Origin, Content-Type, Accept",
 		AllowMethods:     "GET, POST, PATCH, DELETE",
 		AllowCredentials: true,

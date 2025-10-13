@@ -9,17 +9,22 @@ import (
 func RegisterRoutes(app *fiber.App, appContainer *layers.AppContainer) {
 	api := app.Group("/api")
 
+	setupAuthRoutes(api, appContainer.AuthController)
 	setupUserRoutes(api, appContainer.UserController)
 
 	app.Get("/health", healthHandler)
 }
 
+func setupAuthRoutes(api fiber.Router, controller *controllers.AuthController) {
+	authRoutes := api.Group("/auth")
+	authRoutes.Post("/registration", controller.RegisterUser)
+}
+
 func setupUserRoutes(api fiber.Router, controller *controllers.UserController) {
 	userRoutes := api.Group("/user")
-	userRoutes.Post("/create-user", controller.CreateUser)
 	userRoutes.Get("/get-user-by-id", controller.GetUserById)
 	userRoutes.Patch("/update-user/:id", controller.UpdateUser)
-	userRoutes.Delete("/delete-user/:id", controller.DeleteUser)
+	userRoutes.Delete("/delete-user/:id", controller.DeleteUserById)
 }
 
 func healthHandler(c *fiber.Ctx) error {

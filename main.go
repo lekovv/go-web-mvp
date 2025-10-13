@@ -25,7 +25,7 @@ func main() {
 	app.Use(middleware.CORS(&env))
 	app.Use(middleware.RateLimiter())
 
-	appContainer := layers.NewAppContainer(database.DB)
+	appContainer := layers.NewAppContainer(database.DB, &env)
 	http.RegisterRoutes(app, appContainer)
 	log.Fatal(app.Listen(":" + env.ServerPort))
 }

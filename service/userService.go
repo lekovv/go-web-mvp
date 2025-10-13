@@ -7,57 +7,41 @@ import (
 )
 
 type UserServiceInterface interface {
-	CreateUser(payload *models.CreateUserDTO) (*models.User, error)
 	GetUserById(id uuid.UUID) (*models.User, error)
 	UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.User, error)
-	DeleteUser(id uuid.UUID) error
+	DeleteUserById(id uuid.UUID) error
 }
 
 type UserService struct {
-	repo repository.UserRepoInterface
+	userRepo repository.UserRepoInterface
 }
 
-func NewUserService(repo repository.UserRepoInterface) UserServiceInterface {
+func NewUserService(userRepo repository.UserRepoInterface) UserServiceInterface {
 	return &UserService{
-		repo: repo,
+		userRepo: userRepo,
 	}
-}
-
-func (s *UserService) CreateUser(payload *models.CreateUserDTO) (*models.User, error) {
-	newUser := &models.User{
-		FirstName: payload.FirstName,
-		LastName:  payload.LastName,
-		IsActive:  *payload.IsActive,
-	}
-
-	if err := s.repo.CreateUser(newUser); err != nil {
-		return nil, err
-	}
-
-	return newUser, nil
 }
 
 func (s *UserService) GetUserById(id uuid.UUID) (*models.User, error) {
-	var user models.User
-
-	if err := s.repo.GetUserById(id, &user); err != nil {
+	user, err := s.userRepo.GetUserById(id)
+	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return user, nil
 }
 
 func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.User, error) {
-	if err := s.repo.UpdateUser(id, payload); err != nil {
+	if err := s.userRepo.UpdateUser(id, payload); err != nil {
 		return nil, err
 	}
 
 	return s.GetUserById(id)
 }
 
-func (s *UserService) DeleteUser(id uuid.UUID) error {
+func (s *UserService) DeleteUserById(id uuid.UUID) error {
 	var user models.User
 
-	if err := s.repo.DeleteUser(id, &user); err != nil {
+	if err := s.userRepo.DeleteUserById(id, &user); err != nil {
 		return err
 	}
 

@@ -12,42 +12,13 @@ import (
 )
 
 type UserController struct {
-	service service.UserServiceInterface
+	userService service.UserServiceInterface
 }
 
-func NewUserController(service service.UserServiceInterface) *UserController {
+func NewUserController(userService service.UserServiceInterface) *UserController {
 	return &UserController{
-		service: service,
+		userService: userService,
 	}
-}
-
-func (ctrl *UserController) CreateUser(c *fiber.Ctx) error {
-	var payload *models.CreateUserDTO
-
-	if err := c.BodyParser(&payload); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
-	}
-
-	errors := utils.ValidateStruct(payload)
-	if errors != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errors)
-	}
-
-	newUser, err := ctrl.service.CreateUser(payload)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "error",
-			"message": err.Error(),
-		})
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"status": "success",
-		"data":   fiber.Map{"value": newUser},
-	})
 }
 
 func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
@@ -60,7 +31,7 @@ func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
 		})
 	}
 
-	user, err := ctrl.service.GetUserById(id)
+	user, err := ctrl.userService.GetUserById(id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -75,7 +46,7 @@ func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data":   fiber.Map{"value": user},
+		"data":   user,
 	})
 }
 
@@ -103,7 +74,7 @@ func (ctrl *UserController) UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errors)
 	}
 
-	updatedUser, err := ctrl.service.UpdateUser(id, payload)
+	updatedUser, err := ctrl.userService.UpdateUser(id, payload)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -119,11 +90,11 @@ func (ctrl *UserController) UpdateUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data":   fiber.Map{"value": updatedUser},
+		"data":   updatedUser,
 	})
 }
 
-func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
+func (ctrl *UserController) DeleteUserById(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
@@ -133,7 +104,7 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 		})
 	}
 
-	err = ctrl.service.DeleteUser(id)
+	err = ctrl.userService.DeleteUserById(id)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -149,8 +120,6 @@ func (ctrl *UserController) DeleteUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
-		"data": fiber.Map{
-			"value": fmt.Sprintf("Delete User with id: '%s' Success", id.String()),
-		},
+		"data":   fmt.Sprintf("Delete User with id: '%s' Success", id.String()),
 	})
 }

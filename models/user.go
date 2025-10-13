@@ -10,9 +10,9 @@ import (
 type User struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Email        string    `gorm:"unique;not null" json:"email"`
+	Gender       string    `gorm:"not null" json:"gender"`
 	PasswordHash string    `gorm:"not null" json:"-"`
 	RoleID       uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
-	Role         Role      `gorm:"foreignKey:RoleID;references:ID" json:"role"`
 	FirstName    string    `gorm:"not null" json:"first_name"`
 	LastName     string    `gorm:"not null" json:"last_name"`
 	MiddleName   *string   `json:"middle_name"`
@@ -34,16 +34,6 @@ func (user *User) BeforeUpdate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-type CreateUserDTO struct {
-	Email       string    `json:"email" validate:"required"`
-	RoleID      uuid.UUID `json:"role_id" validate:"required"`
-	FirstName   string    `json:"first_name" validate:"required"`
-	LastName    string    `json:"last_name" validate:"required"`
-	MiddleName  *string   `json:"middle_name"`
-	IsActive    *bool     `json:"is_active" validate:"required"`
-	PhoneNumber string    `json:"phone_number" validate:"required"`
-}
-
 type UpdateUserDTO struct {
 	FirstName  *string `json:"first_name,omitempty"`
 	LastName   *string `json:"last_name,omitempty"`
@@ -51,14 +41,14 @@ type UpdateUserDTO struct {
 	IsActive   *bool   `json:"is_active,omitempty"`
 }
 
-type RegistrationDTO struct {
+type UserRegistrationDTO struct {
 	Email       string  `json:"email" validate:"required,email"`
 	Password    string  `json:"password" validate:"required"`
 	FirstName   string  `json:"first_name" validate:"required"`
 	LastName    string  `json:"last_name,omitempty"`
-	MiddleName  *string `json:"middle_name" validate:"required"`
+	MiddleName  *string `json:"middle_name"`
 	PhoneNumber string  `json:"phone_number" validate:"required"`
-	BirthDate   *string `json:"birth_date" validate:"required"`
+	BirthDate   string  `json:"birth_date" validate:"required"`
 	Gender      string  `json:"gender" validate:"required"`
 }
 

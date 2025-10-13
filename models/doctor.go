@@ -8,16 +8,14 @@ import (
 )
 
 type Doctor struct {
-	ID               uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
-	UserID           uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
-	User             User           `gorm:"foreignKey:UserID;references:ID" json:"user"`
-	SpecializationID uuid.UUID      `gorm:"type:uuid;not null" json:"specialization_id"`
-	Specialization   Specialization `gorm:"foreignKey:SpecializationID;references:ID" json:"specialization"`
-	Bio              *string        `json:"bio"`
-	ExperienceYears  *int           `json:"experience_years"`
-	Price            int            `gorm:"not null" json:"price"`
-	Created          time.Time      `gorm:"not null" json:"created_at"`
-	Updated          time.Time      `gorm:"not null" json:"updated_at"`
+	ID               uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
+	UserID           uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+	SpecializationID uuid.UUID `gorm:"type:uuid;not null" json:"specialization_id"`
+	Bio              *string   `json:"bio"`
+	ExperienceYears  *int      `json:"experience_years"`
+	Price            int       `gorm:"not null" json:"price"`
+	Created          time.Time `gorm:"not null" json:"created_at"`
+	Updated          time.Time `gorm:"not null" json:"updated_at"`
 }
 
 func (doctor *Doctor) BeforeCreate(tx *gorm.DB) (err error) {
