@@ -9,6 +9,7 @@ import (
 )
 
 type AppContainer struct {
+	DB             *gorm.DB
 	UserController *controllers.UserController
 	AuthController *controllers.AuthController
 }
@@ -31,6 +32,7 @@ func NewAppContainer(db *gorm.DB, env *config.Env) *AppContainer {
 	authController := controllers.NewAuthController(authService)
 
 	return &AppContainer{
+		DB:             db,
 		UserController: userController,
 		AuthController: authController,
 	}

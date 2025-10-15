@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func HashPassword(password string) (string, error) {
@@ -73,4 +74,16 @@ func ValidateJWT(jwtToken string, jwtSecret string) (*JWTClaims, error) {
 	}
 
 	return nil, fmt.Errorf("invalid token")
+}
+
+func IsTokenBlacklisted(db *gorm.DB, tokenHash string) (bool, error) {
+	var exists bool
+
+	query := "SELECT EXISTS(SELECT 1 FROM blacklist_tokens WHERE token_hash = ? AND expires > ?)"
+	err := db.Raw(query, tokenHash, time.Now().UTC()).Scan(&exists).Error
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

@@ -124,3 +124,7 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 		"message": "logout successful",
 	})
 }
+
+//func (ctrl *AuthController) IsTokenBlacklisted(token string) (bool, error) {
+//	return ctrl.authService.IsTokenBlacklisted(token)
+//}

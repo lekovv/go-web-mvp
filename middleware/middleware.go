@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/lekovv/go-web-mvp/config"
 	"github.com/lekovv/go-web-mvp/utils"
+	"gorm.io/gorm"
 )
 
 func CORS(env *config.Env) fiber.Handler {
@@ -34,7 +35,7 @@ func RateLimiter() fiber.Handler {
 	})
 }
 
-func JWTAuth(env *config.Env) fiber.Handler {
+func JWTAuth(env *config.Env, db *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var token string
 
@@ -50,22 +51,22 @@ func JWTAuth(env *config.Env) fiber.Handler {
 			})
 		}
 
-		//hashedToken := utils.HashToken(token, env.JWTSecret)
-		//
-		//isBlacklisted, err := authRepo.IsTokenBlacklisted(hashedToken)
-		//if err != nil {
-		//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		//		"status":  "fail",
-		//		"message": "error checking token blacklist",
-		//	})
-		//}
-		//
-		//if isBlacklisted {
-		//	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		//		"status":  "fail",
-		//		"message": "token is blacklisted",
-		//	})
-		//}
+		hashedToken := utils.HashToken(token, env.JWTSecret)
+
+		isBlacklisted, err := utils.IsTokenBlacklisted(db, hashedToken)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "error checking token blacklist",
+			})
+		}
+
+		if isBlacklisted {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "token is blacklisted",
+			})
+		}
 
 		claims, err := utils.ValidateJWT(token, env.JWTSecret)
 		if err != nil {
