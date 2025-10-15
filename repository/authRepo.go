@@ -10,6 +10,7 @@ import (
 type AuthRepoInterface interface {
 	AddToBlacklist(blt *models.BlacklistToken) error
 	IsTokenBlacklisted(token string) (bool, error)
+	DeleteExpiredTokens() error
 }
 
 type AuthRepository struct {
@@ -35,4 +36,9 @@ func (r *AuthRepository) IsTokenBlacklisted(token string) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+func (r *AuthRepository) DeleteExpiredTokens() error {
+	result := r.db.Where("expires <= ?", time.Now()).Delete(&models.BlacklistToken{})
+	return result.Error
 }

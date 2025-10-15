@@ -16,6 +16,7 @@ type AuthServiceInterface interface {
 	Login(payload *models.LoginDTO) (*models.AuthResponse, error)
 	Logout(token string, userId uuid.UUID) error
 	IsTokenBlacklisted(tokenHash string) (bool, error)
+	DeleteExpiredTokens() error
 }
 
 type AuthService struct {
@@ -152,4 +153,8 @@ func (s *AuthService) Logout(token string, userId uuid.UUID) error {
 
 func (s *AuthService) IsTokenBlacklisted(tokenHash string) (bool, error) {
 	return s.authRepo.IsTokenBlacklisted(tokenHash)
+}
+
+func (s *AuthService) DeleteExpiredTokens() error {
+	return s.authRepo.DeleteExpiredTokens()
 }
