@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -17,6 +20,12 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func HashToken(token, jwtSecret string) string {
+	hash := hmac.New(sha256.New, []byte(jwtSecret))
+	hash.Write([]byte(token))
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 type JWTClaims struct {

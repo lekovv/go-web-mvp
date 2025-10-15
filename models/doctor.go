@@ -14,8 +14,8 @@ type Doctor struct {
 	Bio              *string   `json:"bio"`
 	ExperienceYears  *int      `json:"experience_years"`
 	Price            int       `gorm:"not null" json:"price"`
-	Created          time.Time `gorm:"not null" json:"created_at"`
-	Updated          time.Time `gorm:"not null" json:"updated_at"`
+	Created          time.Time `gorm:"not null" json:"created"`
+	Updated          time.Time `gorm:"not null" json:"updated"`
 }
 
 func (doctor *Doctor) BeforeCreate(tx *gorm.DB) (err error) {

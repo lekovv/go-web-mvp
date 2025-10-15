@@ -18,8 +18,8 @@ type User struct {
 	MiddleName   *string   `json:"middle_name"`
 	IsActive     bool      `gorm:"not null" json:"is_active"`
 	PhoneNumber  string    `gorm:"not null" json:"phone_number"`
-	Created      time.Time `gorm:"not null" json:"created_at"`
-	Updated      time.Time `gorm:"not null" json:"updated_at"`
+	Created      time.Time `gorm:"not null" json:"created"`
+	Updated      time.Time `gorm:"not null" json:"updated"`
 }
 
 func (user *User) BeforeCreate(tx *gorm.DB) (err error) {

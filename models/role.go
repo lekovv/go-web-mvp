@@ -10,8 +10,8 @@ import (
 type Role struct {
 	ID      uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Name    string    `gorm:"unique;not null" json:"name"`
-	Created time.Time `gorm:"not null" json:"created_at"`
-	Updated time.Time `gorm:"not null" json:"updated_at"`
+	Created time.Time `gorm:"not null" json:"created"`
+	Updated time.Time `gorm:"not null" json:"updated"`
 }
 
 func (role *Role) BeforeCreate(tx *gorm.DB) (err error) {

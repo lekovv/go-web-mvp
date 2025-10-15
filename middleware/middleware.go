@@ -50,6 +50,23 @@ func JWTAuth(env *config.Env) fiber.Handler {
 			})
 		}
 
+		//hashedToken := utils.HashToken(token, env.JWTSecret)
+		//
+		//isBlacklisted, err := authRepo.IsTokenBlacklisted(hashedToken)
+		//if err != nil {
+		//	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		//		"status":  "fail",
+		//		"message": "error checking token blacklist",
+		//	})
+		//}
+		//
+		//if isBlacklisted {
+		//	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		//		"status":  "fail",
+		//		"message": "token is blacklisted",
+		//	})
+		//}
+
 		claims, err := utils.ValidateJWT(token, env.JWTSecret)
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{

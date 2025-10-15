@@ -13,8 +13,8 @@ type Appointment struct {
 	PatientID           uuid.UUID `gorm:"type:uuid;not null" json:"patient_id"`
 	AppointmentDate     time.Time `gorm:"not null" json:"appointment_date"`
 	AppointmentStatusId uuid.UUID `gorm:"type:uuid;not null" json:"appointment_status_id"`
-	Created             time.Time `gorm:"not null" json:"created_at"`
-	Updated             time.Time `gorm:"not null" json:"updated_at"`
+	Created             time.Time `gorm:"not null" json:"created"`
+	Updated             time.Time `gorm:"not null" json:"updated"`
 }
 
 func (appointment *Appointment) BeforeCreate(tx *gorm.DB) (err error) {
@@ -32,8 +32,8 @@ func (appointment *Appointment) BeforeUpdate(tx *gorm.DB) (err error) {
 type AppointmentStatus struct {
 	ID      uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Name    string    `gorm:"not null" json:"name"`
-	Created time.Time `gorm:"not null" json:"created_at"`
-	Updated time.Time `gorm:"not null" json:"updated_at"`
+	Created time.Time `gorm:"not null" json:"created"`
+	Updated time.Time `gorm:"not null" json:"updated"`
 }
 
 func (appointmentStatus *AppointmentStatus) BeforeCreate(tx *gorm.DB) (err error) {

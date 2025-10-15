@@ -13,12 +13,19 @@ type AppContainer struct {
 	AuthController *controllers.AuthController
 }
 
-func NewAppContainer(db *gorm.DB, config *config.Env) *AppContainer {
+func NewAppContainer(db *gorm.DB, env *config.Env) *AppContainer {
 	userRepo := repository.NewUserRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
+	authRepo := repository.NewAuthRepository(db)
 
 	userService := service.NewUserService(userRepo)
-	authService := service.NewAuthService(userRepo, roleRepo, config.JWTSecret, config.JWTExpire, db)
+	authService := service.NewAuthService(
+		userRepo,
+		roleRepo,
+		authRepo,
+		env,
+		db,
+	)
 
 	userController := controllers.NewUserController(userService)
 	authController := controllers.NewAuthController(authService)

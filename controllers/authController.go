@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/lekovv/go-web-mvp/models"
 	"github.com/lekovv/go-web-mvp/service"
@@ -99,7 +101,17 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 		})
 	}
 
-	err := ctrl.authService.Logout(user.UserID)
+	authHeader := c.Get("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "fail",
+			"message": "authorization header is required",
+		})
+	}
+
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+
+	err := ctrl.authService.Logout(token, user.UserID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "fail",

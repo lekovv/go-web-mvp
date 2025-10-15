@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/lekovv/go-web-mvp/config"
 	"github.com/lekovv/go-web-mvp/models"
 	"github.com/lekovv/go-web-mvp/repository"
 	"github.com/lekovv/go-web-mvp/utils"
@@ -13,30 +14,30 @@ import (
 type AuthServiceInterface interface {
 	RegisterUser(payload *models.UserRegistrationDTO) (*models.AuthResponse, error)
 	Login(payload *models.LoginDTO) (*models.AuthResponse, error)
-	Logout(userId uuid.UUID) error
+	Logout(token string, userId uuid.UUID) error
 }
 
 type AuthService struct {
-	userRepo  repository.UserRepoInterface
-	roleRepo  repository.RoleRepoInterface
-	jwtSecret string
-	jwtExpire int
-	db        *gorm.DB
+	userRepo repository.UserRepoInterface
+	roleRepo repository.RoleRepoInterface
+	authRepo repository.AuthRepoInterface
+	env      *config.Env
+	db       *gorm.DB
 }
 
 func NewAuthService(
 	userRepo repository.UserRepoInterface,
 	roleRepo repository.RoleRepoInterface,
-	jwtSecret string,
-	jwtExpire int,
+	authRepo repository.AuthRepoInterface,
+	env *config.Env,
 	db *gorm.DB,
 ) AuthServiceInterface {
 	return &AuthService{
-		userRepo:  userRepo,
-		roleRepo:  roleRepo,
-		jwtSecret: jwtSecret,
-		jwtExpire: jwtExpire,
-		db:        db,
+		userRepo: userRepo,
+		roleRepo: roleRepo,
+		authRepo: authRepo,
+		env:      env,
+		db:       db,
 	}
 }
 
@@ -117,8 +118,8 @@ func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, err
 		user.ID,
 		user.Email,
 		user.RoleID,
-		s.jwtSecret,
-		s.jwtExpire,
+		s.env.JWTSecret,
+		s.env.JWTExpire,
 	)
 	if err != nil {
 		return nil, err
@@ -127,6 +128,23 @@ func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, err
 	return &models.AuthResponse{Token: &token}, nil
 }
 
-func (s *AuthService) Logout(userId uuid.UUID) error {
+func (s *AuthService) Logout(token string, userId uuid.UUID) error {
+	claims, err := utils.ValidateJWT(token, s.env.JWTSecret)
+	if err != nil {
+		return err
+	}
+
+	hashedToken := utils.HashToken(token, s.env.JWTSecret)
+
+	blacklistToken := &models.BlacklistToken{
+		TokenHash: hashedToken,
+		UserID:    userId,
+		Expires:   claims.ExpiresAt.Time,
+	}
+
+	if err := s.authRepo.AddToBlacklist(blacklistToken); err != nil {
+		return err
+	}
+
 	return nil
 }
