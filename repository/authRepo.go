@@ -28,8 +28,8 @@ func (r *AuthRepository) AddToBlacklist(blt *models.BlacklistToken) error {
 func (r *AuthRepository) IsTokenBlacklisted(token string) (bool, error) {
 	var exists bool
 
-	query := "SELECT EXISTS(SELECT 1 FROM blacklist_tokens WHERE token_hash = ? AND expires > ?)"
-	err := r.db.Raw(query, token, time.Now().UTC()).Scan(&exists).Error
+	query := `SELECT EXISTS(SELECT 1 FROM blacklist_tokens WHERE token_hash = ? AND expires > ?)`
+	err := r.db.Raw(query, token, time.Now()).Scan(&exists).Error
 	if err != nil {
 		return false, err
 	}

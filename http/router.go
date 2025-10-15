@@ -6,7 +6,6 @@ import (
 	"github.com/lekovv/go-web-mvp/controllers"
 	"github.com/lekovv/go-web-mvp/layers"
 	"github.com/lekovv/go-web-mvp/middleware"
-	"gorm.io/gorm"
 )
 
 func RegisterRoutes(
@@ -16,8 +15,10 @@ func RegisterRoutes(
 ) {
 	api := app.Group("/api")
 
-	setupAuthRoutes(api, appContainer.AuthController, env, appContainer.DB)
-	setupUserRoutes(api, appContainer.UserController, env, appContainer.DB)
+	api.Use(middleware.InjectAuthService(appContainer.AuthService))
+
+	setupAuthRoutes(api, appContainer.AuthController, env)
+	setupUserRoutes(api, appContainer.UserController, env)
 
 	app.Get("/health", healthHandler)
 }
@@ -26,22 +27,20 @@ func setupAuthRoutes(
 	api fiber.Router,
 	controller *controllers.AuthController,
 	env *config.Env,
-	db *gorm.DB,
 ) {
 	authRoutes := api.Group("/auth")
 	authRoutes.Post("/registration", controller.RegisterUser)
 	authRoutes.Post("/login", controller.Login)
-	authRoutes.Post("/logout", middleware.JWTAuth(env, db), controller.Logout)
+	authRoutes.Post("/logout", middleware.JWTAuth(env), controller.Logout)
 }
 
 func setupUserRoutes(
 	api fiber.Router,
 	controller *controllers.UserController,
 	env *config.Env,
-	db *gorm.DB,
 ) {
 	userRoutes := api.Group("/user")
-	userRoutes.Use(middleware.JWTAuth(env, db))
+	userRoutes.Use(middleware.JWTAuth(env))
 	userRoutes.Get("/get-user-by-id", controller.GetUserById)
 	userRoutes.Patch("/update-user/:id", controller.UpdateUser)
 	userRoutes.Delete("/delete-user/:id", controller.DeleteUserById)

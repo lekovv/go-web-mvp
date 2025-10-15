@@ -15,6 +15,7 @@ type AuthServiceInterface interface {
 	RegisterUser(payload *models.UserRegistrationDTO) (*models.AuthResponse, error)
 	Login(payload *models.LoginDTO) (*models.AuthResponse, error)
 	Logout(token string, userId uuid.UUID) error
+	IsTokenBlacklisted(tokenHash string) (bool, error)
 }
 
 type AuthService struct {
@@ -147,4 +148,8 @@ func (s *AuthService) Logout(token string, userId uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (s *AuthService) IsTokenBlacklisted(tokenHash string) (bool, error) {
+	return s.authRepo.IsTokenBlacklisted(tokenHash)
 }

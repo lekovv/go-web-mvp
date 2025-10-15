@@ -9,8 +9,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/lekovv/go-web-mvp/config"
+	"github.com/lekovv/go-web-mvp/service"
 	"github.com/lekovv/go-web-mvp/utils"
-	"gorm.io/gorm"
 )
 
 func CORS(env *config.Env) fiber.Handler {
@@ -35,7 +35,14 @@ func RateLimiter() fiber.Handler {
 	})
 }
 
-func JWTAuth(env *config.Env, db *gorm.DB) fiber.Handler {
+func InjectAuthService(authService service.AuthServiceInterface) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		c.Locals("authService", authService)
+		return c.Next()
+	}
+}
+
+func JWTAuth(env *config.Env) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var token string
 
@@ -51,9 +58,17 @@ func JWTAuth(env *config.Env, db *gorm.DB) fiber.Handler {
 			})
 		}
 
+		authService, ok := c.Locals("authService").(service.AuthServiceInterface)
+		if !ok {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "auth service not available",
+			})
+		}
+
 		hashedToken := utils.HashToken(token, env.JWTSecret)
 
-		isBlacklisted, err := utils.IsTokenBlacklisted(db, hashedToken)
+		isBlacklisted, err := authService.IsTokenBlacklisted(hashedToken)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"status":  "fail",
