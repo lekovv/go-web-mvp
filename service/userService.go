@@ -7,8 +7,8 @@ import (
 )
 
 type UserServiceInterface interface {
-	GetUserById(id uuid.UUID) (*models.User, error)
-	UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.User, error)
+	GetUserById(id uuid.UUID) (*models.UserResponse, error)
+	UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.UserResponse, error)
 	DeleteUserById(id uuid.UUID) error
 }
 
@@ -22,15 +22,15 @@ func NewUserService(userRepo repository.UserRepoInterface) UserServiceInterface 
 	}
 }
 
-func (s *UserService) GetUserById(id uuid.UUID) (*models.User, error) {
-	user, err := s.userRepo.GetUserById(id)
+func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
+	response, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return response, nil
 }
 
-func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.User, error) {
+func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.UserResponse, error) {
 	if err := s.userRepo.UpdateUser(id, payload); err != nil {
 		return nil, err
 	}

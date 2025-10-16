@@ -12,14 +12,30 @@ type User struct {
 	Email        string    `gorm:"unique;not null" json:"email"`
 	Gender       string    `gorm:"not null" json:"gender"`
 	PasswordHash string    `gorm:"not null" json:"-"`
-	RoleID       uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
+	RoleID       uuid.UUID `gorm:"type:uuid;not null" json:"-"`
 	FirstName    string    `gorm:"not null" json:"first_name"`
 	LastName     string    `gorm:"not null" json:"last_name"`
 	MiddleName   *string   `json:"middle_name"`
 	IsActive     bool      `gorm:"not null" json:"is_active"`
 	PhoneNumber  string    `gorm:"not null" json:"phone_number"`
-	Created      time.Time `gorm:"not null" json:"created"`
-	Updated      time.Time `gorm:"not null" json:"updated"`
+	Created      time.Time `gorm:"not null" json:"-"`
+	Updated      time.Time `gorm:"not null" json:"-"`
+}
+
+type UserResponse struct {
+	ID              uuid.UUID `json:"id"`
+	Email           string    `json:"email"`
+	Gender          string    `json:"gender"`
+	FirstName       string    `json:"first_name"`
+	LastName        string    `json:"last_name"`
+	MiddleName      *string   `json:"middle_name,omitempty"`
+	IsActive        bool      `json:"is_active"`
+	PhoneNumber     string    `json:"phone_number"`
+	BirthDate       *string   `json:"birth_date,omitempty"`
+	Specialization  *string   `json:"specialization,omitempty"`
+	Bio             *string   `json:"bio,omitempty"`
+	ExperienceYears *int      `json:"experience_years,omitempty"`
+	Price           *int      `json:"price,omitempty"`
 }
 
 func (user *User) BeforeCreate(tx *gorm.DB) (err error) {

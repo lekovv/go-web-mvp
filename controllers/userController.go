@@ -22,16 +22,17 @@ func NewUserController(userService service.UserServiceInterface) *UserController
 }
 
 func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
-	idParam := c.Query("id")
-	id, err := uuid.Parse(idParam)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	claims, ok := c.Locals("user").(*utils.JWTClaims)
+	if !ok || claims == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"status":  "fail",
-			"message": err.Error(),
+			"message": "invalid token claims",
 		})
 	}
 
-	user, err := ctrl.userService.GetUserById(id)
+	userID := claims.UserID
+
+	user, err := ctrl.userService.GetUserById(userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{

@@ -29,7 +29,7 @@ type DoctorRegistrationDTO struct {
 	Specialization  string  `json:"specialization" validate:"required"`
 	Bio             *string `json:"bio"`
 	ExperienceYears *int    `json:"experience_years"`
-	Price           int     ` json:"price" validate:"required"`
+	Price           int     `json:"price" validate:"required"`
 }
 
 func (doctor *Doctor) BeforeCreate(tx *gorm.DB) (err error) {
