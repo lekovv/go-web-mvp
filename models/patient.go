@@ -9,10 +9,21 @@ import (
 
 type Patient struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	UserId    uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
 	BirthDate time.Time `gorm:"not null" json:"birth_date"`
 	Created   time.Time `gorm:"not null" json:"created"`
 	Updated   time.Time `gorm:"not null" json:"updated"`
+}
+
+type PatientRegistrationDTO struct {
+	Email       string  `json:"email" validate:"required,email"`
+	Password    string  `json:"password" validate:"required"`
+	FirstName   string  `json:"first_name" validate:"required"`
+	LastName    string  `json:"last_name" validate:"required"`
+	MiddleName  *string `json:"middle_name,omitempty"`
+	PhoneNumber string  `json:"phone_number" validate:"required"`
+	BirthDate   string  `json:"birth_date" validate:"required"`
+	Gender      string  `json:"gender" validate:"required"`
 }
 
 func (patient *Patient) BeforeCreate(tx *gorm.DB) (err error) {

@@ -18,6 +18,20 @@ type Doctor struct {
 	Updated          time.Time `gorm:"not null" json:"updated"`
 }
 
+type DoctorRegistrationDTO struct {
+	Email           string  `json:"email" validate:"required,email"`
+	Password        string  `json:"password" validate:"required"`
+	FirstName       string  `json:"first_name" validate:"required"`
+	LastName        string  `json:"last_name" validate:"required"`
+	MiddleName      *string `json:"middle_name,omitempty"`
+	PhoneNumber     string  `json:"phone_number" validate:"required"`
+	Gender          string  `json:"gender" validate:"required"`
+	Specialization  string  `json:"specialization" validate:"required"`
+	Bio             *string `json:"bio"`
+	ExperienceYears *int    `json:"experience_years"`
+	Price           int     ` json:"price" validate:"required"`
+}
+
 func (doctor *Doctor) BeforeCreate(tx *gorm.DB) (err error) {
 	doctor.ID = uuid.New()
 	doctor.Created = time.Now()

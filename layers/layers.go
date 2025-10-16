@@ -18,10 +18,12 @@ type AppContainer struct {
 func NewAppContainer(db *gorm.DB, env *config.Env) *AppContainer {
 	userRepo := repository.NewUserRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
+	specializationRepo := repository.NewSpecializationRepository(db)
 	authRepo := repository.NewAuthRepository(db)
 
 	userService := service.NewUserService(userRepo)
 	authService := service.NewAuthService(
+		specializationRepo,
 		userRepo,
 		roleRepo,
 		authRepo,

@@ -41,17 +41,6 @@ type UpdateUserDTO struct {
 	IsActive   *bool   `json:"is_active,omitempty"`
 }
 
-type UserRegistrationDTO struct {
-	Email       string  `json:"email" validate:"required,email"`
-	Password    string  `json:"password" validate:"required"`
-	FirstName   string  `json:"first_name" validate:"required"`
-	LastName    string  `json:"last_name,omitempty"`
-	MiddleName  *string `json:"middle_name"`
-	PhoneNumber string  `json:"phone_number" validate:"required"`
-	BirthDate   string  `json:"birth_date" validate:"required"`
-	Gender      string  `json:"gender" validate:"required"`
-}
-
 type LoginDTO struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`

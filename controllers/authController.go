@@ -20,8 +20,8 @@ func NewAuthController(authService service.AuthServiceInterface) *AuthController
 	}
 }
 
-func (ctrl *AuthController) RegisterUser(c *fiber.Ctx) error {
-	var payload *models.UserRegistrationDTO
+func (ctrl *AuthController) RegisterPatient(c *fiber.Ctx) error {
+	var payload *models.PatientRegistrationDTO
 
 	if err := c.BodyParser(&payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -35,7 +35,7 @@ func (ctrl *AuthController) RegisterUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errors)
 	}
 
-	response, err := ctrl.authService.RegisterUser(payload)
+	response, err := ctrl.authService.RegisterPatient(payload)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -52,6 +52,42 @@ func (ctrl *AuthController) RegisterUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
 		"message": "registration successful",
+		"data":    response,
+	})
+}
+
+func (ctrl *AuthController) CreateDoctor(c *fiber.Ctx) error {
+	var payload *models.DoctorRegistrationDTO
+
+	if err := c.BodyParser(&payload); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "fail",
+			"message": err.Error(),
+		})
+	}
+
+	errors := utils.ValidateStruct(payload)
+	if errors != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errors)
+	}
+
+	response, err := ctrl.authService.CreateDoctor(payload)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"status":  "fail",
+				"message": "User Not Found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status":  "success",
+		"message": "doctor registration successful",
 		"data":    response,
 	})
 }
@@ -124,7 +160,3 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 		"message": "logout successful",
 	})
 }
-
-//func (ctrl *AuthController) IsTokenBlacklisted(token string) (bool, error) {
-//	return ctrl.authService.IsTokenBlacklisted(token)
-//}

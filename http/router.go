@@ -29,7 +29,8 @@ func setupAuthRoutes(
 	env *config.Env,
 ) {
 	authRoutes := api.Group("/auth")
-	authRoutes.Post("/registration", controller.RegisterUser)
+	authRoutes.Post("/registration", controller.RegisterPatient)
+	authRoutes.Post("/create-doctor", controller.CreateDoctor)
 	authRoutes.Post("/login", controller.Login)
 	authRoutes.Post("/logout", middleware.JWTAuth(env), controller.Logout)
 }

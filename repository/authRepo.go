@@ -18,7 +18,7 @@ type AuthRepository struct {
 }
 
 func NewAuthRepository(db *gorm.DB) *AuthRepository {
-	return &AuthRepository{db: db}
+	return &AuthRepository{db}
 }
 
 func (r *AuthRepository) AddToBlacklist(blt *models.BlacklistToken) error {

@@ -12,7 +12,8 @@ import (
 )
 
 type AuthServiceInterface interface {
-	RegisterUser(payload *models.UserRegistrationDTO) (*models.AuthResponse, error)
+	RegisterPatient(payload *models.PatientRegistrationDTO) (*models.AuthResponse, error)
+	CreateDoctor(payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error)
 	Login(payload *models.LoginDTO) (*models.AuthResponse, error)
 	Logout(token string, userId uuid.UUID) error
 	IsTokenBlacklisted(tokenHash string) (bool, error)
@@ -20,14 +21,17 @@ type AuthServiceInterface interface {
 }
 
 type AuthService struct {
-	userRepo repository.UserRepoInterface
-	roleRepo repository.RoleRepoInterface
-	authRepo repository.AuthRepoInterface
-	env      *config.Env
-	db       *gorm.DB
+	specializationRepo repository.SpecializationRepoInterface
+	userRepo           repository.UserRepoInterface
+	roleRepo           repository.RoleRepoInterface
+	authRepo           repository.AuthRepoInterface
+
+	env *config.Env
+	db  *gorm.DB
 }
 
 func NewAuthService(
+	specializationRepo repository.SpecializationRepoInterface,
 	userRepo repository.UserRepoInterface,
 	roleRepo repository.RoleRepoInterface,
 	authRepo repository.AuthRepoInterface,
@@ -35,15 +39,16 @@ func NewAuthService(
 	db *gorm.DB,
 ) AuthServiceInterface {
 	return &AuthService{
-		userRepo: userRepo,
-		roleRepo: roleRepo,
-		authRepo: authRepo,
-		env:      env,
-		db:       db,
+		specializationRepo: specializationRepo,
+		userRepo:           userRepo,
+		roleRepo:           roleRepo,
+		authRepo:           authRepo,
+		env:                env,
+		db:                 db,
 	}
 }
 
-func (s *AuthService) RegisterUser(payload *models.UserRegistrationDTO) (*models.AuthResponse, error) {
+func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*models.AuthResponse, error) {
 	existingUser, _ := s.userRepo.GetUserByEmail(payload.Email)
 	if existingUser != nil {
 		return nil, errors.New("user already exists")
@@ -85,11 +90,73 @@ func (s *AuthService) RegisterUser(payload *models.UserRegistrationDTO) (*models
 		createdUser = user
 
 		patient := &models.Patient{
-			UserId:    user.ID,
+			UserID:    user.ID,
 			BirthDate: birthDate,
 		}
 
 		if err := tx.Create(patient).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.AuthResponse{User: createdUser}, nil
+}
+
+func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error) {
+	existingUser, _ := s.userRepo.GetUserByEmail(payload.Email)
+	if existingUser != nil {
+		return nil, errors.New("user already exists")
+	}
+
+	hashedPassword, err := utils.HashPassword(payload.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	doctorRole, err := s.roleRepo.GetRoleByName("doctor")
+	if err != nil {
+		return nil, err
+	}
+
+	specialization, err := s.specializationRepo.GetSpecializationByName(payload.Specialization)
+	if err != nil {
+		return nil, err
+	}
+
+	var createdUser *models.User
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		user := &models.User{
+			Email:        payload.Email,
+			Gender:       payload.Gender,
+			PasswordHash: hashedPassword,
+			RoleID:       doctorRole.ID,
+			FirstName:    payload.FirstName,
+			LastName:     payload.LastName,
+			MiddleName:   payload.MiddleName,
+			IsActive:     true,
+			PhoneNumber:  payload.PhoneNumber,
+		}
+
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+		createdUser = user
+
+		doctor := &models.Doctor{
+			UserID:           user.ID,
+			SpecializationID: specialization.ID,
+			Bio:              payload.Bio,
+			ExperienceYears:  payload.ExperienceYears,
+			Price:            payload.Price,
+		}
+
+		if err := tx.Create(doctor).Error; err != nil {
 			return err
 		}
 		return nil
