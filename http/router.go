@@ -42,7 +42,7 @@ func setupUserRoutes(
 ) {
 	userRoutes := api.Group("/user")
 	userRoutes.Use(middleware.JWTAuth(env))
-	userRoutes.Get("/get-user-by-id", controller.GetUserById)
+	userRoutes.Get("/get-user", controller.GetUserById)
 	userRoutes.Patch("/update-user/:id", controller.UpdateUser)
 	userRoutes.Delete("/delete-user/:id", controller.DeleteUserById)
 }
