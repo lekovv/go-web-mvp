@@ -32,16 +32,24 @@ func main() {
 	jobManager := scheduler.CreateJobs(appContainer.AuthService)
 	go jobManager.StartAll(ctx)
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			_ = middleware.ErrorHandler()(c)
+			return nil
+		},
+	})
+
 	app.Use(logger.New())
 	app.Use(middleware.Recover())
 	app.Use(middleware.CORS(&env))
 	app.Use(middleware.RateLimiter())
+	app.Use(middleware.ErrorHandler())
 
 	http.RegisterRoutes(app, appContainer, &env)
 
 	gracefulShutdown(app, cancel, jobManager)
 
+	log.Printf("Server starting on port %s", env.ServerPort)
 	log.Fatal(app.Listen(":" + env.ServerPort))
 }
 
@@ -62,9 +70,11 @@ func gracefulShutdown(
 		jobManager.Wait()
 
 		log.Println("Shutting down HTTP server...")
-		err := app.Shutdown()
-		if err != nil {
-			return
+		if err := app.Shutdown(); err != nil {
+			log.Printf("Error during server shutdown: %v", err)
 		}
+
+		log.Println("Shutdown completed")
+		os.Exit(0)
 	}()
 }

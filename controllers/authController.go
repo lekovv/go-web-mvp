@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	Errors "github.com/lekovv/go-web-mvp/middleware"
 	"github.com/lekovv/go-web-mvp/models"
 	"github.com/lekovv/go-web-mvp/service"
 	"github.com/lekovv/go-web-mvp/utils"
-	"gorm.io/gorm"
 )
 
 type AuthController struct {
@@ -24,34 +24,24 @@ func (ctrl *AuthController) RegisterPatient(c *fiber.Ctx) error {
 	var payload *models.PatientRegistrationDTO
 
 	if err := c.BodyParser(&payload); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		Errors.ThrowBadRequestError("Invalid request body: " + err.Error())
 	}
 
-	errors := utils.ValidateStruct(payload)
-	if errors != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errors)
+	if validationErr := utils.ValidateStruct(payload); validationErr != nil {
+		Errors.ThrowError(validationErr)
 	}
 
 	response, err := ctrl.authService.RegisterPatient(payload)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"status":  "fail",
-				"message": "User Not Found",
-			})
+		if strings.Contains(err.Error(), "already exists") {
+			Errors.ThrowConflictError("User already exists")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "error",
-			"message": err.Error(),
-		})
+		Errors.ThrowInternalError("Failed to register patient: " + err.Error())
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
-		"message": "registration successful",
+		"message": "Patient registration successful",
 		"data":    response,
 	})
 }
@@ -60,34 +50,27 @@ func (ctrl *AuthController) CreateDoctor(c *fiber.Ctx) error {
 	var payload *models.DoctorRegistrationDTO
 
 	if err := c.BodyParser(&payload); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		Errors.ThrowBadRequestError("Invalid request body: " + err.Error())
 	}
 
-	errors := utils.ValidateStruct(payload)
-	if errors != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errors)
+	if validationErr := utils.ValidateStruct(payload); validationErr != nil {
+		Errors.ThrowError(validationErr)
 	}
 
 	response, err := ctrl.authService.CreateDoctor(payload)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"status":  "fail",
-				"message": "User Not Found",
-			})
+		if strings.Contains(err.Error(), "already exists") {
+			Errors.ThrowConflictError("User already exists")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "error",
-			"message": err.Error(),
-		})
+		if strings.Contains(err.Error(), "specialization") {
+			Errors.ThrowNotFoundError("Specialization not found")
+		}
+		Errors.ThrowInternalError("Failed to create doctor: " + err.Error())
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
-		"message": "doctor registration successful",
+		"message": "Doctor registration successful",
 		"data":    response,
 	})
 }
@@ -96,34 +79,30 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var payload *models.LoginDTO
 
 	if err := c.BodyParser(&payload); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		Errors.ThrowBadRequestError("Invalid request body: " + err.Error())
 	}
 
-	errors := utils.ValidateStruct(payload)
-	if errors != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errors)
+	if validationErr := utils.ValidateStruct(payload); validationErr != nil {
+		Errors.ThrowError(validationErr)
 	}
 
 	response, err := ctrl.authService.Login(payload)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"status":  "fail",
-				"message": "User Not Found",
-			})
+		if strings.Contains(err.Error(), "not found") {
+			Errors.ThrowNotFoundError("User not found")
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		if strings.Contains(err.Error(), "invalid password") {
+			Errors.ThrowUnauthorizedError("Invalid email or password")
+		}
+		if strings.Contains(err.Error(), "not active") {
+			Errors.ThrowForbiddenError("User account is deactivated")
+		}
+		Errors.ThrowInternalError("Login failed: " + err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
-		"message": "login successful",
+		"message": "Login successful",
 		"data":    response,
 	})
 }
@@ -131,32 +110,23 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 	user, ok := c.Locals("user").(*utils.JWTClaims)
 	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "unauthorized",
-		})
+		Errors.ThrowUnauthorizedError("Invalid token claims")
 	}
 
 	authHeader := c.Get("Authorization")
 	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"status":  "fail",
-			"message": "authorization header is required",
-		})
+		Errors.ThrowUnauthorizedError("Authorization header is required")
 	}
 
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 
 	err := ctrl.authService.Logout(token, user.UserID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"status":  "fail",
-			"message": err.Error(),
-		})
+		Errors.ThrowInternalError("Failed to logout: " + err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
-		"message": "logout successful",
+		"message": "Logout successful",
 	})
 }
