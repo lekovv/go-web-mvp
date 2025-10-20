@@ -59,3 +59,16 @@ func ConnectDB(env *config.Env) *Database {
 
 	return &Database{DB: db}
 }
+
+func (d *Database) Close() error {
+	sqlDB, err := d.DB.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+
+	if err := sqlDB.Close(); err != nil {
+		return fmt.Errorf("failed to close database connections: %w", err)
+	}
+
+	return nil
+}

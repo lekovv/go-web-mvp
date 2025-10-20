@@ -32,9 +32,6 @@ func RateLimiter() fiber.Handler {
 	return limiter.New(limiter.Config{
 		Max:        100,
 		Expiration: 1 * time.Minute,
-		KeyGenerator: func(c *fiber.Ctx) string {
-			return c.Get("x-forwarded-for")
-		},
 		LimitReached: func(c *fiber.Ctx) error {
 			ThrowTooManyRequestsError("Rate limit exceeded")
 			return nil
