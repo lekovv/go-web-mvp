@@ -8,14 +8,15 @@ import (
 )
 
 type Doctor struct {
-	ID               uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	UserID           uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
-	SpecializationID uuid.UUID `gorm:"type:uuid;not null" json:"specialization_id"`
-	Bio              *string   `json:"bio"`
-	ExperienceYears  *int      `json:"experience_years"`
-	Price            int       `gorm:"not null" json:"price"`
-	Created          time.Time `gorm:"not null" json:"created"`
-	Updated          time.Time `gorm:"not null" json:"updated"`
+	ID               uuid.UUID      `gorm:"type:uuid;primaryKey" json:"id"`
+	UserID           uuid.UUID      `gorm:"type:uuid;not null" json:"user_id"`
+	SpecializationID uuid.UUID      `gorm:"type:uuid;not null" json:"specialization_id"`
+	Specialization   Specialization `gorm:"foreignKey:SpecializationID" json:"-"`
+	Bio              *string        `json:"bio"`
+	ExperienceYears  *int           `json:"experience_years"`
+	Price            int            `gorm:"not null" json:"price"`
+	Created          time.Time      `gorm:"not null" json:"created"`
+	Updated          time.Time      `gorm:"not null" json:"updated"`
 }
 
 type DoctorRegistrationDTO struct {

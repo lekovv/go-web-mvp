@@ -7,7 +7,9 @@ import (
 )
 
 type UserRepoInterface interface {
-	GetUserById(id uuid.UUID) (*models.UserResponse, error)
+	GetUserById(id uuid.UUID) (*models.User, error)
+	GetPatientByUserId(userId uuid.UUID) (*models.Patient, error)
+	GetDoctorByUserId(userId uuid.UUID) (*models.Doctor, error)
 	GetUserByEmail(email string) (*models.User, error)
 	UpdateUser(id uuid.UUID, updates *models.UpdateUserDTO) error
 	DeleteUserById(id uuid.UUID, user *models.User) error
@@ -21,38 +23,28 @@ func NewUserRepository(db *gorm.DB) UserRepoInterface {
 	return &UserRepository{db}
 }
 
-func (r *UserRepository) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
-	var resp models.UserResponse
-
-	selectFields := `
-        users.id,
-        users.email,
-        users.gender,
-        users.first_name,
-        users.last_name,
-        users.middle_name,
-        users.is_active,
-        users.phone_number,
-        to_char(patients.birth_date, 'YYYY-MM-DD') AS birth_date,
-        specializations.name AS specialization,
-        doctors.bio AS bio,
-        doctors.experience_years AS experience_years,
-        doctors.price AS price
-    `
-	err := r.db.
-		Model(&models.User{}).
-		Select(selectFields).
-		Joins("LEFT JOIN patients ON patients.user_id = users.id").
-		Joins("LEFT JOIN doctors ON doctors.user_id = users.id").
-		Joins("LEFT JOIN specializations ON specializations.id = doctors.specialization_id").
-		Where("users.id = ?", id).
-		Scan(&resp).
-		Error
-
-	if err != nil {
+func (r *UserRepository) GetUserById(id uuid.UUID) (*models.User, error) {
+	var user models.User
+	if err := r.db.Preload("Role").First(&user, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
-	return &resp, nil
+	return &user, nil
+}
+
+func (r *UserRepository) GetPatientByUserId(userId uuid.UUID) (*models.Patient, error) {
+	var patient models.Patient
+	if err := r.db.First(&patient, "user_id = ?", userId).Error; err != nil {
+		return nil, err
+	}
+	return &patient, nil
+}
+
+func (r *UserRepository) GetDoctorByUserId(userId uuid.UUID) (*models.Doctor, error) {
+	var doctor models.Doctor
+	if err := r.db.Preload("Specialization").First(&doctor, "user_id = ?", userId).Error; err != nil {
+		return nil, err
+	}
+	return &doctor, nil
 }
 
 func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {

@@ -27,7 +27,7 @@ func NewUserService(userRepo repository.UserRepoInterface) UserServiceInterface 
 }
 
 func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
-	response, err := s.userRepo.GetUserById(id)
+	user, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, Error.NewNotFoundError("User not found")
@@ -39,7 +39,54 @@ func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
 		)
 	}
 
-	return response, nil
+	resp := &models.UserResponse{
+		ID:          user.ID,
+		Email:       user.Email,
+		Gender:      user.Gender,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		MiddleName:  user.MiddleName,
+		IsActive:    user.IsActive,
+		PhoneNumber: user.PhoneNumber,
+	}
+
+	switch user.Role.Name {
+	case "patient":
+		patient, err := s.userRepo.GetPatientByUserId(user.ID)
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, Error.WrapError(
+					err,
+					Error.ErrorTypeInternal,
+					"Failed to get patient data",
+				)
+			}
+		} else {
+			birthDate := patient.BirthDate.Format("2006-01-02")
+			resp.BirthDate = &birthDate
+		}
+
+	case "doctor":
+		doctor, err := s.userRepo.GetDoctorByUserId(user.ID)
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, Error.WrapError(
+					err,
+					Error.ErrorTypeInternal,
+					"Failed to get doctor data",
+				)
+			}
+		} else {
+			resp.Specialization = &doctor.Specialization.Name
+			resp.Bio = doctor.Bio
+			resp.ExperienceYears = doctor.ExperienceYears
+			resp.Price = &doctor.Price
+		}
+
+	default:
+	}
+
+	return resp, nil
 }
 
 func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.UserResponse, error) {

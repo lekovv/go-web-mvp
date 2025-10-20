@@ -13,6 +13,7 @@ type User struct {
 	Gender       string    `gorm:"not null" json:"gender"`
 	PasswordHash string    `gorm:"not null" json:"-"`
 	RoleID       uuid.UUID `gorm:"type:uuid;not null" json:"-"`
+	Role         Role      `gorm:"foreignKey:RoleID" json:"-"`
 	FirstName    string    `gorm:"not null" json:"first_name"`
 	LastName     string    `gorm:"not null" json:"last_name"`
 	MiddleName   *string   `json:"middle_name"`
