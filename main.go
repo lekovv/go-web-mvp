@@ -34,12 +34,7 @@ func main() {
 	jobManager := scheduler.CreateJobs(appContainer.AuthService)
 	go jobManager.StartAll(jobsCtx)
 
-	app := fiber.New(fiber.Config{
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			_ = middleware.ErrorHandler()(c)
-			return nil
-		},
-	})
+	app := fiber.New()
 
 	app.Use(logger.New())
 	app.Use(middleware.Recover())

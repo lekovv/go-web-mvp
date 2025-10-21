@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	Error "github.com/lekovv/go-web-mvp/errors"
+	AppErrors "github.com/lekovv/go-web-mvp/errors"
 	"github.com/lekovv/go-web-mvp/models"
 	"github.com/lekovv/go-web-mvp/repository"
 	"gorm.io/gorm"
@@ -30,11 +30,11 @@ func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
 	user, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, Error.NewNotFoundError("User not found")
+			return nil, AppErrors.NewNotFoundError("User not found")
 		}
-		return nil, Error.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Error.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to get user",
 		)
 	}
@@ -55,9 +55,9 @@ func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
 		patient, err := s.userRepo.GetPatientByUserId(user.ID)
 		if err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, Error.WrapError(
+				return nil, AppErrors.WrapError(
 					err,
-					Error.ErrorTypeInternal,
+					AppErrors.ErrorTypeInternal,
 					"Failed to get patient data",
 				)
 			}
@@ -70,9 +70,9 @@ func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
 		doctor, err := s.userRepo.GetDoctorByUserId(user.ID)
 		if err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, Error.WrapError(
+				return nil, AppErrors.WrapError(
 					err,
-					Error.ErrorTypeInternal,
+					AppErrors.ErrorTypeInternal,
 					"Failed to get doctor data",
 				)
 			}
@@ -82,8 +82,6 @@ func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
 			resp.ExperienceYears = doctor.ExperienceYears
 			resp.Price = &doctor.Price
 		}
-
-	default:
 	}
 
 	return resp, nil
@@ -93,22 +91,22 @@ func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*
 	_, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, Error.NewNotFoundError("User not found")
+			return nil, AppErrors.NewNotFoundError("User not found")
 		}
-		return nil, Error.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Error.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to check user existence",
 		)
 	}
 
 	if err := s.userRepo.UpdateUser(id, payload); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, Error.NewNotFoundError("User not found")
+			return nil, AppErrors.NewNotFoundError("User not found")
 		}
-		return nil, Error.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Error.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to update user",
 		)
 	}
@@ -121,11 +119,11 @@ func (s *UserService) DeleteUserById(id uuid.UUID) error {
 
 	if err := s.userRepo.DeleteUserById(id, &user); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return Error.NewNotFoundError("User not found")
+			return AppErrors.NewNotFoundError("User not found")
 		}
-		return Error.WrapError(
+		return AppErrors.WrapError(
 			err,
-			Error.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to delete user",
 		)
 	}

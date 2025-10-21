@@ -1,7 +1,8 @@
 package errors
 
 import (
-	_ "fmt"
+	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -10,10 +11,14 @@ type AppError struct {
 	Message    string      `json:"message"`
 	StatusCode int         `json:"status_code"`
 	Details    interface{} `json:"details,omitempty"`
+	Err        error       `json:"-"`
 }
 
 func (e *AppError) Error() string {
-	return e.Message
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %s (caused by: %v)", e.Type, e.Message, e.Err)
+	}
+	return fmt.Sprintf("%s: %s", e.Type, e.Message)
 }
 
 type ErrorType string
@@ -111,7 +116,8 @@ func NewBadRequestError(message string) *AppError {
 }
 
 func WrapError(err error, errorType ErrorType, message string) *AppError {
-	if appErr, ok := err.(*AppError); ok {
+	var appErr *AppError
+	if errors.As(err, &appErr) {
 		return appErr
 	}
 
@@ -140,5 +146,10 @@ func WrapError(err error, errorType ErrorType, message string) *AppError {
 		Type:       errorType,
 		Message:    message,
 		StatusCode: statusCode,
+		Err:        err,
 	}
+}
+
+func (e *AppError) UnwrapError() error {
+	return e.Err
 }

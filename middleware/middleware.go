@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/lekovv/go-web-mvp/config"
+	AppErrors "github.com/lekovv/go-web-mvp/errors"
 	"github.com/lekovv/go-web-mvp/service"
 	"github.com/lekovv/go-web-mvp/utils"
 )
@@ -33,8 +34,7 @@ func RateLimiter() fiber.Handler {
 		Max:        100,
 		Expiration: 1 * time.Minute,
 		LimitReached: func(c *fiber.Ctx) error {
-			ThrowTooManyRequestsError("Rate limit exceeded")
-			return nil
+			return AppErrors.NewBadRequestError("Rate limit exceeded")
 		},
 	})
 }
@@ -56,27 +56,27 @@ func JWTAuth(env *config.Env) fiber.Handler {
 		}
 
 		if token == "" {
-			ThrowUnauthorizedError("Authorization header is required")
+			return AppErrors.NewUnauthorizedError("Authorization header is required")
 		}
 
 		authService, ok := c.Locals("authService").(service.AuthServiceInterface)
 		if !ok {
-			ThrowInternalError("Auth service not available")
+			return AppErrors.NewInternalError("Auth service not available")
 		}
 
 		hashedToken := utils.HashToken(token, env.JWTSecret)
 		isBlacklisted, err := authService.IsTokenBlacklisted(hashedToken)
 		if err != nil {
-			ThrowInternalError("Error checking token blacklist: " + err.Error())
+			return AppErrors.WrapError(err, AppErrors.ErrorTypeInternal, "Error checking token blacklist")
 		}
 
 		if isBlacklisted {
-			ThrowUnauthorizedError("Token is blacklisted")
+			return AppErrors.NewUnauthorizedError("Token is blacklisted")
 		}
 
 		claims, err := utils.ValidateJWT(token, env.JWTSecret)
 		if err != nil {
-			ThrowUnauthorizedError("Invalid or expired token")
+			return AppErrors.NewUnauthorizedError("Invalid or expired token")
 		}
 
 		c.Locals("user", claims)

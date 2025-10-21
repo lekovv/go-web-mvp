@@ -2,11 +2,10 @@ package service
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/lekovv/go-web-mvp/config"
-	Errors "github.com/lekovv/go-web-mvp/errors"
+	AppErrors "github.com/lekovv/go-web-mvp/errors"
 	"github.com/lekovv/go-web-mvp/models"
 	"github.com/lekovv/go-web-mvp/repository"
 	"github.com/lekovv/go-web-mvp/utils"
@@ -48,23 +47,25 @@ func NewAuthService(
 
 func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*models.AuthResponse, error) {
 	existingUser, err := s.userRepo.GetUserByEmail(payload.Email)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, Errors.WrapError(
-			err,
-			Errors.ErrorTypeInternal,
-			"Failed to check existing user",
-		)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, AppErrors.WrapError(
+				err,
+				AppErrors.ErrorTypeInternal,
+				"Failed to check existing user",
+			)
+		}
 	}
 
 	if existingUser != nil {
-		return nil, Errors.NewConflictError("User already exists")
+		return nil, AppErrors.NewConflictError("User already exists")
 	}
 
 	hashedPassword, err := utils.HashPassword(payload.Password)
 	if err != nil {
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to hash password",
 		)
 	}
@@ -72,18 +73,18 @@ func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*
 	patientRole, err := s.roleRepo.GetRoleByName("patient")
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, Errors.NewNotFoundError("Patient role not found")
+			return nil, AppErrors.NewNotFoundError("Patient role not found")
 		}
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to get patient role",
 		)
 	}
 
 	birthDate, err := utils.ParseDate(payload.BirthDate)
 	if err != nil {
-		return nil, Errors.NewValidationError(
+		return nil, AppErrors.NewValidationError(
 			"Invalid birth date format",
 			[]string{err.Error()},
 		)
@@ -106,12 +107,9 @@ func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*
 	}
 
 	if err := s.userRepo.CreateUserWithPatient(user, patient); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
-			return nil, Errors.NewConflictError("User already exists")
-		}
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to create user and patient",
 		)
 	}
@@ -121,23 +119,25 @@ func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*
 
 func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error) {
 	existingUser, err := s.userRepo.GetUserByEmail(payload.Email)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, Errors.WrapError(
-			err,
-			Errors.ErrorTypeInternal,
-			"Failed to check existing user",
-		)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, AppErrors.WrapError(
+				err,
+				AppErrors.ErrorTypeInternal,
+				"Failed to check existing user",
+			)
+		}
 	}
 
 	if existingUser != nil {
-		return nil, Errors.NewConflictError("User already exists")
+		return nil, AppErrors.NewConflictError("User already exists")
 	}
 
 	hashedPassword, err := utils.HashPassword(payload.Password)
 	if err != nil {
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to hash password",
 		)
 	}
@@ -145,11 +145,11 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 	doctorRole, err := s.roleRepo.GetRoleByName("doctor")
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, Errors.NewNotFoundError("Doctor role not found")
+			return nil, AppErrors.NewNotFoundError("Doctor role not found")
 		}
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to get doctor role",
 		)
 	}
@@ -157,11 +157,11 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 	specialization, err := s.specializationRepo.GetSpecializationByName(payload.Specialization)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, Errors.NewNotFoundError("Specialization not found")
+			return nil, AppErrors.NewNotFoundError("Specialization not found")
 		}
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to get specialization",
 		)
 	}
@@ -186,12 +186,9 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 	}
 
 	if err := s.userRepo.CreateUserWithDoctor(user, doctor); err != nil {
-		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
-			return nil, Errors.NewConflictError("User already exists")
-		}
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to create user and doctor",
 		)
 	}
@@ -203,21 +200,21 @@ func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, err
 	user, err := s.userRepo.GetUserByEmail(payload.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, Errors.NewUnauthorizedError("Invalid email or password")
+			return nil, AppErrors.NewUnauthorizedError("Invalid email or password")
 		}
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to get user",
 		)
 	}
 
 	if !user.IsActive {
-		return nil, Errors.NewForbiddenError("User account is deactivated")
+		return nil, AppErrors.NewForbiddenError("User account is deactivated")
 	}
 
 	if !utils.CheckPasswordHash(payload.Password, user.PasswordHash) {
-		return nil, Errors.NewUnauthorizedError("Invalid email or password")
+		return nil, AppErrors.NewUnauthorizedError("Invalid email or password")
 	}
 
 	token, err := utils.GenerateJWT(
@@ -228,9 +225,9 @@ func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, err
 		s.env.JWTExpire,
 	)
 	if err != nil {
-		return nil, Errors.WrapError(
+		return nil, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to generate token",
 		)
 	}
@@ -241,9 +238,9 @@ func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, err
 func (s *AuthService) Logout(token string, userId uuid.UUID) error {
 	claims, err := utils.ValidateJWT(token, s.env.JWTSecret)
 	if err != nil {
-		return Errors.WrapError(
+		return AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeUnauthorized,
+			AppErrors.ErrorTypeUnauthorized,
 			"Invalid token",
 		)
 	}
@@ -256,9 +253,9 @@ func (s *AuthService) Logout(token string, userId uuid.UUID) error {
 	}
 
 	if err := s.authRepo.AddToBlacklist(blacklistToken); err != nil {
-		return Errors.WrapError(
+		return AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to add token to blacklist",
 		)
 	}
@@ -269,9 +266,9 @@ func (s *AuthService) Logout(token string, userId uuid.UUID) error {
 func (s *AuthService) IsTokenBlacklisted(tokenHash string) (bool, error) {
 	isBlacklisted, err := s.authRepo.IsTokenBlacklisted(tokenHash)
 	if err != nil {
-		return false, Errors.WrapError(
+		return false, AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to check token blacklist",
 		)
 	}
@@ -281,9 +278,9 @@ func (s *AuthService) IsTokenBlacklisted(tokenHash string) (bool, error) {
 
 func (s *AuthService) DeleteExpiredTokens() error {
 	if err := s.authRepo.DeleteExpiredTokens(); err != nil {
-		return Errors.WrapError(
+		return AppErrors.WrapError(
 			err,
-			Errors.ErrorTypeInternal,
+			AppErrors.ErrorTypeInternal,
 			"Failed to delete expired tokens",
 		)
 	}
