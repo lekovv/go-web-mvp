@@ -32,7 +32,7 @@ func (j *TokenBlacklistCleaner) Start(ctx context.Context) {
 			log.Println("Token blacklist cleaner shutting down")
 			return
 		case <-ticker.C:
-			if err := j.authService.DeleteExpiredTokens(); err != nil {
+			if err := j.authService.DeleteExpiredTokens(ctx); err != nil {
 				log.Printf("Token blacklist cleaner failed to delete expired tokens: %v", err)
 			} else {
 				log.Printf("Token blacklist cleaner successfully deleted expired tokens")

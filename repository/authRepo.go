@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"time"
 
 	"github.com/lekovv/go-web-mvp/models"
@@ -8,9 +9,9 @@ import (
 )
 
 type AuthRepoInterface interface {
-	AddToBlacklist(blt *models.BlacklistToken) error
-	IsTokenBlacklisted(token string) (bool, error)
-	DeleteExpiredTokens() error
+	AddToBlacklist(ctx context.Context, blt *models.BlacklistToken) error
+	IsTokenBlacklisted(ctx context.Context, token string) (bool, error)
+	DeleteExpiredTokens(ctx context.Context) error
 }
 
 type AuthRepository struct {
@@ -21,16 +22,16 @@ func NewAuthRepository(db *gorm.DB) *AuthRepository {
 	return &AuthRepository{db}
 }
 
-func (r *AuthRepository) AddToBlacklist(blt *models.BlacklistToken) error {
-	result := r.db.Create(blt)
+func (r *AuthRepository) AddToBlacklist(ctx context.Context, blt *models.BlacklistToken) error {
+	result := r.db.WithContext(ctx).Create(blt)
 	return result.Error
 }
 
-func (r *AuthRepository) IsTokenBlacklisted(token string) (bool, error) {
+func (r *AuthRepository) IsTokenBlacklisted(ctx context.Context, token string) (bool, error) {
 	var exists bool
 
 	query := `SELECT EXISTS(SELECT 1 FROM blacklist_tokens WHERE token_hash = ? AND expires > ?)`
-	err := r.db.Raw(query, token, time.Now()).Scan(&exists).Error
+	err := r.db.WithContext(ctx).Raw(query, token, time.Now()).Scan(&exists).Error
 	if err != nil {
 		return false, err
 	}
@@ -38,7 +39,7 @@ func (r *AuthRepository) IsTokenBlacklisted(token string) (bool, error) {
 	return exists, nil
 }
 
-func (r *AuthRepository) DeleteExpiredTokens() error {
-	result := r.db.Where("expires <= ?", time.Now()).Delete(&models.BlacklistToken{})
+func (r *AuthRepository) DeleteExpiredTokens(ctx context.Context) error {
+	result := r.db.WithContext(ctx).Where("expires <= ?", time.Now()).Delete(&models.BlacklistToken{})
 	return result.Error
 }

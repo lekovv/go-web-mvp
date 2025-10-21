@@ -27,7 +27,7 @@ func (ctrl *UserController) GetUserById(c *fiber.Ctx) error {
 
 	userID := claims.UserID
 
-	user, err := ctrl.userService.GetUserById(userID)
+	user, err := ctrl.userService.GetUserById(c.Context(), userID)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (ctrl *UserController) UpdateUser(c *fiber.Ctx) error {
 		return validationErr
 	}
 
-	updatedUser, err := ctrl.userService.UpdateUser(id, payload)
+	updatedUser, err := ctrl.userService.UpdateUser(c.Context(), id, payload)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (ctrl *UserController) DeleteUserById(c *fiber.Ctx) error {
 		return AppErrors.NewBadRequestError("Invalid user ID format")
 	}
 
-	err = ctrl.userService.DeleteUserById(id)
+	err = ctrl.userService.DeleteUserById(c.Context(), id)
 	if err != nil {
 		return err
 	}

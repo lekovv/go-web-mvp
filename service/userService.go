@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/uuid"
@@ -11,9 +12,9 @@ import (
 )
 
 type UserServiceInterface interface {
-	GetUserById(id uuid.UUID) (*models.UserResponse, error)
-	UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.UserResponse, error)
-	DeleteUserById(id uuid.UUID) error
+	GetUserById(ctx context.Context, id uuid.UUID) (*models.UserResponse, error)
+	UpdateUser(ctx context.Context, id uuid.UUID, payload *models.UpdateUserDTO) (*models.UserResponse, error)
+	DeleteUserById(ctx context.Context, id uuid.UUID) error
 }
 
 type UserService struct {
@@ -26,17 +27,13 @@ func NewUserService(userRepo repository.UserRepoInterface) UserServiceInterface 
 	}
 }
 
-func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
-	user, err := s.userRepo.GetUserById(id)
+func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*models.UserResponse, error) {
+	user, err := s.userRepo.GetUserById(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.NewNotFoundError("User not found")
 		}
-		return nil, AppErrors.WrapError(
-			err,
-			AppErrors.ErrorTypeInternal,
-			"Failed to get user",
-		)
+		return nil, AppErrors.WrapError(err, AppErrors.ErrorTypeInternal, "Failed to get user")
 	}
 
 	resp := &models.UserResponse{
@@ -50,57 +47,23 @@ func (s *UserService) GetUserById(id uuid.UUID) (*models.UserResponse, error) {
 		PhoneNumber: user.PhoneNumber,
 	}
 
-	switch user.Role.Name {
-	case "patient":
-		patient, err := s.userRepo.GetPatientByUserId(user.ID)
-		if err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, AppErrors.WrapError(
-					err,
-					AppErrors.ErrorTypeInternal,
-					"Failed to get patient data",
-				)
-			}
-		} else {
-			birthDate := patient.BirthDate.Format("2006-01-02")
-			resp.BirthDate = &birthDate
-		}
+	if user.Patient != nil {
+		birthDate := user.Patient.BirthDate.Format("2006-01-02")
+		resp.BirthDate = &birthDate
+	}
 
-	case "doctor":
-		doctor, err := s.userRepo.GetDoctorByUserId(user.ID)
-		if err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, AppErrors.WrapError(
-					err,
-					AppErrors.ErrorTypeInternal,
-					"Failed to get doctor data",
-				)
-			}
-		} else {
-			resp.Specialization = &doctor.Specialization.Name
-			resp.Bio = doctor.Bio
-			resp.ExperienceYears = doctor.ExperienceYears
-			resp.Price = &doctor.Price
-		}
+	if user.Doctor != nil {
+		resp.Specialization = &user.Doctor.Specialization.Name
+		resp.Bio = user.Doctor.Bio
+		resp.ExperienceYears = user.Doctor.ExperienceYears
+		resp.Price = &user.Doctor.Price
 	}
 
 	return resp, nil
 }
 
-func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*models.UserResponse, error) {
-	_, err := s.userRepo.GetUserById(id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, AppErrors.NewNotFoundError("User not found")
-		}
-		return nil, AppErrors.WrapError(
-			err,
-			AppErrors.ErrorTypeInternal,
-			"Failed to check user existence",
-		)
-	}
-
-	if err := s.userRepo.UpdateUser(id, payload); err != nil {
+func (s *UserService) UpdateUser(ctx context.Context, id uuid.UUID, payload *models.UpdateUserDTO) (*models.UserResponse, error) {
+	if err := s.userRepo.UpdateUser(ctx, id, payload); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.NewNotFoundError("User not found")
 		}
@@ -111,13 +74,13 @@ func (s *UserService) UpdateUser(id uuid.UUID, payload *models.UpdateUserDTO) (*
 		)
 	}
 
-	return s.GetUserById(id)
+	return s.GetUserById(ctx, id)
 }
 
-func (s *UserService) DeleteUserById(id uuid.UUID) error {
+func (s *UserService) DeleteUserById(ctx context.Context, id uuid.UUID) error {
 	var user models.User
 
-	if err := s.userRepo.DeleteUserById(id, &user); err != nil {
+	if err := s.userRepo.DeleteUserById(ctx, id, &user); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return AppErrors.NewNotFoundError("User not found")
 		}

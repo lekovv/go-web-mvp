@@ -29,7 +29,7 @@ func (ctrl *AuthController) RegisterPatient(c *fiber.Ctx) error {
 		return validationErr
 	}
 
-	response, err := ctrl.authService.RegisterPatient(payload)
+	response, err := ctrl.authService.RegisterPatient(c.Context(), payload)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (ctrl *AuthController) CreateDoctor(c *fiber.Ctx) error {
 		return validationErr
 	}
 
-	response, err := ctrl.authService.CreateDoctor(payload)
+	response, err := ctrl.authService.CreateDoctor(c.Context(), payload)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 		return validationErr
 	}
 
-	response, err := ctrl.authService.Login(payload)
+	response, err := ctrl.authService.Login(c.Context(), payload)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (ctrl *AuthController) Logout(c *fiber.Ctx) error {
 
 	token := authHeader[7:]
 
-	err := ctrl.authService.Logout(token, user.UserID)
+	err := ctrl.authService.Logout(c.Context(), token, user.UserID)
 	if err != nil {
 		return err
 	}

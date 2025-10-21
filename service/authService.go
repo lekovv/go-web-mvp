@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/uuid"
@@ -13,12 +14,12 @@ import (
 )
 
 type AuthServiceInterface interface {
-	RegisterPatient(payload *models.PatientRegistrationDTO) (*models.AuthResponse, error)
-	CreateDoctor(payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error)
-	Login(payload *models.LoginDTO) (*models.AuthResponse, error)
-	Logout(token string, userId uuid.UUID) error
-	IsTokenBlacklisted(tokenHash string) (bool, error)
-	DeleteExpiredTokens() error
+	RegisterPatient(ctx context.Context, payload *models.PatientRegistrationDTO) (*models.AuthResponse, error)
+	CreateDoctor(ctx context.Context, payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error)
+	Login(ctx context.Context, payload *models.LoginDTO) (*models.AuthResponse, error)
+	Logout(ctx context.Context, token string, userId uuid.UUID) error
+	IsTokenBlacklisted(ctx context.Context, tokenHash string) (bool, error)
+	DeleteExpiredTokens(ctx context.Context) error
 }
 
 type AuthService struct {
@@ -45,8 +46,8 @@ func NewAuthService(
 	}
 }
 
-func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*models.AuthResponse, error) {
-	existingUser, err := s.userRepo.GetUserByEmail(payload.Email)
+func (s *AuthService) RegisterPatient(ctx context.Context, payload *models.PatientRegistrationDTO) (*models.AuthResponse, error) {
+	existingUser, err := s.userRepo.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.WrapError(
@@ -70,7 +71,7 @@ func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*
 		)
 	}
 
-	patientRole, err := s.roleRepo.GetRoleByName("patient")
+	patientRole, err := s.roleRepo.GetRoleByName(ctx, "patient")
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.NewNotFoundError("Patient role not found")
@@ -106,7 +107,7 @@ func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*
 		BirthDate: birthDate,
 	}
 
-	if err := s.userRepo.CreateUserWithPatient(user, patient); err != nil {
+	if err := s.userRepo.CreateUserWithPatient(ctx, user, patient); err != nil {
 		return nil, AppErrors.WrapError(
 			err,
 			AppErrors.ErrorTypeInternal,
@@ -117,8 +118,8 @@ func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*
 	return &models.AuthResponse{User: user}, nil
 }
 
-func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error) {
-	existingUser, err := s.userRepo.GetUserByEmail(payload.Email)
+func (s *AuthService) CreateDoctor(ctx context.Context, payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error) {
+	existingUser, err := s.userRepo.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.WrapError(
@@ -142,7 +143,7 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 		)
 	}
 
-	doctorRole, err := s.roleRepo.GetRoleByName("doctor")
+	doctorRole, err := s.roleRepo.GetRoleByName(ctx, "doctor")
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.NewNotFoundError("Doctor role not found")
@@ -154,7 +155,7 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 		)
 	}
 
-	specialization, err := s.specializationRepo.GetSpecializationByName(payload.Specialization)
+	specialization, err := s.specializationRepo.GetSpecializationByName(ctx, payload.Specialization)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.NewNotFoundError("Specialization not found")
@@ -185,7 +186,7 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 		Price:            payload.Price,
 	}
 
-	if err := s.userRepo.CreateUserWithDoctor(user, doctor); err != nil {
+	if err := s.userRepo.CreateUserWithDoctor(ctx, user, doctor); err != nil {
 		return nil, AppErrors.WrapError(
 			err,
 			AppErrors.ErrorTypeInternal,
@@ -196,8 +197,8 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 	return &models.AuthResponse{User: user}, nil
 }
 
-func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, error) {
-	user, err := s.userRepo.GetUserByEmail(payload.Email)
+func (s *AuthService) Login(ctx context.Context, payload *models.LoginDTO) (*models.AuthResponse, error) {
+	user, err := s.userRepo.GetUserByEmail(ctx, payload.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, AppErrors.NewUnauthorizedError("Invalid email or password")
@@ -235,7 +236,7 @@ func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, err
 	return &models.AuthResponse{Token: &token}, nil
 }
 
-func (s *AuthService) Logout(token string, userId uuid.UUID) error {
+func (s *AuthService) Logout(ctx context.Context, token string, userId uuid.UUID) error {
 	claims, err := utils.ValidateJWT(token, s.env.JWTSecret)
 	if err != nil {
 		return AppErrors.WrapError(
@@ -252,7 +253,7 @@ func (s *AuthService) Logout(token string, userId uuid.UUID) error {
 		Expires:   claims.ExpiresAt.Time,
 	}
 
-	if err := s.authRepo.AddToBlacklist(blacklistToken); err != nil {
+	if err := s.authRepo.AddToBlacklist(ctx, blacklistToken); err != nil {
 		return AppErrors.WrapError(
 			err,
 			AppErrors.ErrorTypeInternal,
@@ -263,8 +264,8 @@ func (s *AuthService) Logout(token string, userId uuid.UUID) error {
 	return nil
 }
 
-func (s *AuthService) IsTokenBlacklisted(tokenHash string) (bool, error) {
-	isBlacklisted, err := s.authRepo.IsTokenBlacklisted(tokenHash)
+func (s *AuthService) IsTokenBlacklisted(ctx context.Context, tokenHash string) (bool, error) {
+	isBlacklisted, err := s.authRepo.IsTokenBlacklisted(ctx, tokenHash)
 	if err != nil {
 		return false, AppErrors.WrapError(
 			err,
@@ -276,8 +277,8 @@ func (s *AuthService) IsTokenBlacklisted(tokenHash string) (bool, error) {
 	return isBlacklisted, nil
 }
 
-func (s *AuthService) DeleteExpiredTokens() error {
-	if err := s.authRepo.DeleteExpiredTokens(); err != nil {
+func (s *AuthService) DeleteExpiredTokens(ctx context.Context) error {
+	if err := s.authRepo.DeleteExpiredTokens(ctx); err != nil {
 		return AppErrors.WrapError(
 			err,
 			AppErrors.ErrorTypeInternal,

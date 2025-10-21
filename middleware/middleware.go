@@ -65,7 +65,7 @@ func JWTAuth(env *config.Env) fiber.Handler {
 		}
 
 		hashedToken := utils.HashToken(token, env.JWTSecret)
-		isBlacklisted, err := authService.IsTokenBlacklisted(hashedToken)
+		isBlacklisted, err := authService.IsTokenBlacklisted(c.Context(), hashedToken)
 		if err != nil {
 			return AppErrors.WrapError(err, AppErrors.ErrorTypeInternal, "Error checking token blacklist")
 		}

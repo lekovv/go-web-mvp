@@ -21,6 +21,8 @@ type User struct {
 	PhoneNumber  string    `gorm:"not null" json:"phone_number"`
 	Created      time.Time `gorm:"not null" json:"-"`
 	Updated      time.Time `gorm:"not null" json:"-"`
+	Patient      *Patient  `gorm:"foreignKey:UserID" json:"-"`
+	Doctor       *Doctor   `gorm:"foreignKey:UserID" json:"-"`
 }
 
 type UserResponse struct {
