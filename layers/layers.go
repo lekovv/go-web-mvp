@@ -28,7 +28,6 @@ func NewAppContainer(db *gorm.DB, env *config.Env) *AppContainer {
 		roleRepo,
 		authRepo,
 		env,
-		db,
 	)
 
 	userController := controllers.NewUserController(userService)

@@ -7,6 +7,8 @@ import (
 )
 
 type UserRepoInterface interface {
+	CreateUserWithPatient(user *models.User, patient *models.Patient) error
+	CreateUserWithDoctor(user *models.User, doctor *models.Doctor) error
 	GetUserById(id uuid.UUID) (*models.User, error)
 	GetPatientByUserId(userId uuid.UUID) (*models.Patient, error)
 	GetDoctorByUserId(userId uuid.UUID) (*models.Doctor, error)
@@ -21,6 +23,38 @@ type UserRepository struct {
 
 func NewUserRepository(db *gorm.DB) UserRepoInterface {
 	return &UserRepository{db}
+}
+
+func (r *UserRepository) CreateUserWithPatient(user *models.User, patient *models.Patient) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+
+		patient.UserID = user.ID
+
+		if err := tx.Create(patient).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r *UserRepository) CreateUserWithDoctor(user *models.User, doctor *models.Doctor) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+
+		doctor.UserID = user.ID
+
+		if err := tx.Create(doctor).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (r *UserRepository) GetUserById(id uuid.UUID) (*models.User, error) {

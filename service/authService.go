@@ -27,9 +27,7 @@ type AuthService struct {
 	userRepo           repository.UserRepoInterface
 	roleRepo           repository.RoleRepoInterface
 	authRepo           repository.AuthRepoInterface
-
-	env *config.Env
-	db  *gorm.DB
+	env                *config.Env
 }
 
 func NewAuthService(
@@ -38,7 +36,6 @@ func NewAuthService(
 	roleRepo repository.RoleRepoInterface,
 	authRepo repository.AuthRepoInterface,
 	env *config.Env,
-	db *gorm.DB,
 ) AuthServiceInterface {
 	return &AuthService{
 		specializationRepo: specializationRepo,
@@ -46,7 +43,6 @@ func NewAuthService(
 		roleRepo:           roleRepo,
 		authRepo:           authRepo,
 		env:                env,
-		db:                 db,
 	}
 }
 
@@ -93,62 +89,42 @@ func (s *AuthService) RegisterPatient(payload *models.PatientRegistrationDTO) (*
 		)
 	}
 
-	var createdUser *models.User
-
-	err = s.db.Transaction(func(tx *gorm.DB) error {
-		user := &models.User{
-			Email:        payload.Email,
-			Gender:       payload.Gender,
-			PasswordHash: hashedPassword,
-			RoleID:       patientRole.ID,
-			FirstName:    payload.FirstName,
-			LastName:     payload.LastName,
-			MiddleName:   payload.MiddleName,
-			IsActive:     true,
-			PhoneNumber:  payload.PhoneNumber,
-		}
-
-		if err := tx.Create(user).Error; err != nil {
-			if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
-				return Errors.NewConflictError("User already exists")
-			}
-			return Errors.WrapError(
-				err,
-				Errors.ErrorTypeInternal,
-				"Failed to create user",
-			)
-		}
-
-		createdUser = user
-
-		patient := &models.Patient{
-			UserID:    user.ID,
-			BirthDate: birthDate,
-		}
-
-		if err := tx.Create(patient).Error; err != nil {
-			return Errors.WrapError(
-				err,
-				Errors.ErrorTypeInternal,
-				"Failed to create patient",
-			)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
+	user := &models.User{
+		Email:        payload.Email,
+		Gender:       payload.Gender,
+		PasswordHash: hashedPassword,
+		RoleID:       patientRole.ID,
+		FirstName:    payload.FirstName,
+		LastName:     payload.LastName,
+		MiddleName:   payload.MiddleName,
+		IsActive:     true,
+		PhoneNumber:  payload.PhoneNumber,
 	}
 
-	return &models.AuthResponse{User: createdUser}, nil
+	patient := &models.Patient{
+		BirthDate: birthDate,
+	}
+
+	if err := s.userRepo.CreateUserWithPatient(user, patient); err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return nil, Errors.NewConflictError("User already exists")
+		}
+		return nil, Errors.WrapError(
+			err,
+			Errors.ErrorTypeInternal,
+			"Failed to create user and patient",
+		)
+	}
+
+	return &models.AuthResponse{User: user}, nil
 }
 
 func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error) {
 	existingUser, err := s.userRepo.GetUserByEmail(payload.Email)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, Errors.WrapError(
-			err, Errors.ErrorTypeInternal,
+			err,
+			Errors.ErrorTypeInternal,
 			"Failed to check existing user",
 		)
 	}
@@ -190,58 +166,37 @@ func (s *AuthService) CreateDoctor(payload *models.DoctorRegistrationDTO) (*mode
 		)
 	}
 
-	var createdUser *models.User
-
-	err = s.db.Transaction(func(tx *gorm.DB) error {
-		user := &models.User{
-			Email:        payload.Email,
-			Gender:       payload.Gender,
-			PasswordHash: hashedPassword,
-			RoleID:       doctorRole.ID,
-			FirstName:    payload.FirstName,
-			LastName:     payload.LastName,
-			MiddleName:   payload.MiddleName,
-			IsActive:     true,
-			PhoneNumber:  payload.PhoneNumber,
-		}
-
-		if err := tx.Create(user).Error; err != nil {
-			if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
-				return Errors.NewConflictError("User already exists")
-			}
-			return Errors.WrapError(
-				err,
-				Errors.ErrorTypeInternal,
-				"Failed to create user",
-			)
-		}
-
-		createdUser = user
-
-		doctor := &models.Doctor{
-			UserID:           user.ID,
-			SpecializationID: specialization.ID,
-			Bio:              payload.Bio,
-			ExperienceYears:  payload.ExperienceYears,
-			Price:            payload.Price,
-		}
-
-		if err := tx.Create(doctor).Error; err != nil {
-			return Errors.WrapError(
-				err,
-				Errors.ErrorTypeInternal,
-				"Failed to create doctor",
-			)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
+	user := &models.User{
+		Email:        payload.Email,
+		Gender:       payload.Gender,
+		PasswordHash: hashedPassword,
+		RoleID:       doctorRole.ID,
+		FirstName:    payload.FirstName,
+		LastName:     payload.LastName,
+		MiddleName:   payload.MiddleName,
+		IsActive:     true,
+		PhoneNumber:  payload.PhoneNumber,
 	}
 
-	return &models.AuthResponse{User: createdUser}, nil
+	doctor := &models.Doctor{
+		SpecializationID: specialization.ID,
+		Bio:              payload.Bio,
+		ExperienceYears:  payload.ExperienceYears,
+		Price:            payload.Price,
+	}
+
+	if err := s.userRepo.CreateUserWithDoctor(user, doctor); err != nil {
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "unique constraint") {
+			return nil, Errors.NewConflictError("User already exists")
+		}
+		return nil, Errors.WrapError(
+			err,
+			Errors.ErrorTypeInternal,
+			"Failed to create user and doctor",
+		)
+	}
+
+	return &models.AuthResponse{User: user}, nil
 }
 
 func (s *AuthService) Login(payload *models.LoginDTO) (*models.AuthResponse, error) {
