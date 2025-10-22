@@ -31,6 +31,7 @@ func setupAdminRoutes(
 ) {
 	adminRoutes := api.Group("/admin")
 	adminRoutes.Use(middleware.JWTAuth(env))
+	adminRoutes.Use(middleware.RequireRole("admin"))
 
 	adminRoutes.Post("/create-doctor", controller.CreateDoctor)
 	adminRoutes.Patch("/update-user/:id", controller.UpdateUser)

@@ -83,3 +83,26 @@ func JWTAuth(env *config.Env) fiber.Handler {
 		return c.Next()
 	}
 }
+
+func RequireRole(allowedRoles ...string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		claims, ok := c.Locals("user").(*utils.JWTClaims)
+		if !ok || claims == nil {
+			return AppErrors.NewUnauthorizedError("Invalid token claims")
+		}
+
+		hasPermission := false
+		for _, allowedRole := range allowedRoles {
+			if claims.Role == allowedRole {
+				hasPermission = true
+				break
+			}
+		}
+
+		if !hasPermission {
+			return AppErrors.NewForbiddenError("Access denied")
+		}
+
+		return c.Next()
+	}
+}
