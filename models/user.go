@@ -66,6 +66,6 @@ type LoginDTO struct {
 }
 
 type AuthResponse struct {
-	Token *string `json:"token,omitempty"`
-	User  *User   `json:"user,omitempty"`
+	Token        *string       `json:"token,omitempty"`
+	UserResponse *UserResponse `json:"user,omitempty"`
 }

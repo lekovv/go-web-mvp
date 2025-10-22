@@ -115,7 +115,19 @@ func (s *AuthService) RegisterPatient(ctx context.Context, payload *models.Patie
 		)
 	}
 
-	return &models.AuthResponse{User: user}, nil
+	userResponse := &models.UserResponse{
+		ID:          user.ID,
+		Email:       user.Email,
+		Gender:      user.Gender,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		MiddleName:  user.MiddleName,
+		IsActive:    user.IsActive,
+		PhoneNumber: user.PhoneNumber,
+		BirthDate:   &payload.BirthDate,
+	}
+
+	return &models.AuthResponse{UserResponse: userResponse}, nil
 }
 
 func (s *AuthService) CreateDoctor(ctx context.Context, payload *models.DoctorRegistrationDTO) (*models.AuthResponse, error) {
@@ -194,7 +206,22 @@ func (s *AuthService) CreateDoctor(ctx context.Context, payload *models.DoctorRe
 		)
 	}
 
-	return &models.AuthResponse{User: user}, nil
+	userResponse := &models.UserResponse{
+		ID:              user.ID,
+		Email:           user.Email,
+		Gender:          user.Gender,
+		FirstName:       user.FirstName,
+		LastName:        user.LastName,
+		MiddleName:      user.MiddleName,
+		IsActive:        user.IsActive,
+		PhoneNumber:     user.PhoneNumber,
+		Specialization:  &payload.Specialization,
+		Bio:             payload.Bio,
+		ExperienceYears: payload.ExperienceYears,
+		Price:           &payload.Price,
+	}
+
+	return &models.AuthResponse{UserResponse: userResponse}, nil
 }
 
 func (s *AuthService) Login(ctx context.Context, payload *models.LoginDTO) (*models.AuthResponse, error) {
