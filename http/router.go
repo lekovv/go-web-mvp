@@ -19,8 +19,22 @@ func RegisterRoutes(
 
 	setupAuthRoutes(api, appContainer.AuthController, env)
 	setupUserRoutes(api, appContainer.UserController, env)
+	setupAdminRoutes(api, appContainer.AdminController, env)
 
 	app.Get("/health", healthHandler)
+}
+
+func setupAdminRoutes(
+	api fiber.Router,
+	controller *controllers.AdminController,
+	env *config.Env,
+) {
+	adminRoutes := api.Group("/admin")
+	adminRoutes.Use(middleware.JWTAuth(env))
+
+	adminRoutes.Post("/create-doctor", controller.CreateDoctor)
+	adminRoutes.Patch("/update-user/:id", controller.UpdateUser)
+	adminRoutes.Delete("/delete-user/:id", controller.DeleteUserById)
 }
 
 func setupAuthRoutes(
@@ -30,7 +44,6 @@ func setupAuthRoutes(
 ) {
 	authRoutes := api.Group("/auth")
 	authRoutes.Post("/registration", controller.RegisterPatient)
-	authRoutes.Post("/create-doctor", controller.CreateDoctor)
 	authRoutes.Post("/login", controller.Login)
 	authRoutes.Post("/logout", middleware.JWTAuth(env), controller.Logout)
 }
@@ -42,9 +55,8 @@ func setupUserRoutes(
 ) {
 	userRoutes := api.Group("/user")
 	userRoutes.Use(middleware.JWTAuth(env))
+
 	userRoutes.Get("/get-user", controller.GetUserById)
-	userRoutes.Patch("/update-user/:id", controller.UpdateUser)
-	userRoutes.Delete("/delete-user/:id", controller.DeleteUserById)
 }
 
 func healthHandler(c *fiber.Ctx) error {

@@ -41,29 +41,6 @@ func (ctrl *AuthController) RegisterPatient(c *fiber.Ctx) error {
 	})
 }
 
-func (ctrl *AuthController) CreateDoctor(c *fiber.Ctx) error {
-	var payload *models.DoctorRegistrationDTO
-
-	if err := c.BodyParser(&payload); err != nil {
-		return AppErrors.NewBadRequestError("Invalid request body: " + err.Error())
-	}
-
-	if validationErr := utils.ValidateStruct(payload); validationErr != nil {
-		return validationErr
-	}
-
-	response, err := ctrl.authService.CreateDoctor(c.Context(), payload)
-	if err != nil {
-		return err
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"status":  "success",
-		"message": "Doctor registration successful",
-		"data":    response,
-	})
-}
-
 func (ctrl *AuthController) Login(c *fiber.Ctx) error {
 	var payload *models.LoginDTO
 
