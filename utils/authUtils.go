@@ -31,21 +31,21 @@ func HashToken(token, jwtSecret string) string {
 type JWTClaims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
-	RoleId uuid.UUID `json:"role_id"`
+	Role   string    `json:"role_name"`
 	jwt.RegisteredClaims
 }
 
 func GenerateJWT(
 	userID uuid.UUID,
 	email string,
-	role uuid.UUID,
+	role string,
 	jwtSecret string,
 	jwtExpire int,
 ) (string, error) {
 	claims := JWTClaims{
 		UserID: userID,
 		Email:  email,
-		RoleId: role,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(jwtExpire) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

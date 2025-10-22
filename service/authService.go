@@ -245,10 +245,22 @@ func (s *AuthService) Login(ctx context.Context, payload *models.LoginDTO) (*mod
 		return nil, AppErrors.NewUnauthorizedError("Invalid email or password")
 	}
 
+	role, err := s.roleRepo.GetRoleByID(ctx, user.RoleID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, AppErrors.NewNotFoundError("Role not found")
+		}
+		return nil, AppErrors.WrapError(
+			err,
+			AppErrors.ErrorTypeInternal,
+			"Failed to get role",
+		)
+	}
+
 	token, err := utils.GenerateJWT(
 		user.ID,
 		user.Email,
-		user.RoleID,
+		role.Name,
 		s.env.JWTSecret,
 		s.env.JWTExpire,
 	)
