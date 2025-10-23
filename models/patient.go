@@ -17,13 +17,13 @@ type Patient struct {
 
 type PatientRegistrationDTO struct {
 	Email       string  `json:"email" validate:"required,email"`
-	Password    string  `json:"password" validate:"required"`
+	Password    string  `json:"password" validate:"required,min=8,max=72"`
 	FirstName   string  `json:"first_name" validate:"required"`
 	LastName    string  `json:"last_name" validate:"required"`
 	MiddleName  *string `json:"middle_name,omitempty"`
-	PhoneNumber string  `json:"phone_number" validate:"required"`
+	PhoneNumber string  `json:"phone_number" validate:"required,min=10,max=15"`
 	BirthDate   string  `json:"birth_date" validate:"required"`
-	Gender      string  `json:"gender" validate:"required"`
+	Gender      string  `json:"gender" validate:"required,oneof=male female other"`
 }
 
 func (patient *Patient) BeforeCreate(tx *gorm.DB) (err error) {

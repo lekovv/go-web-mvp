@@ -21,12 +21,12 @@ type Doctor struct {
 
 type DoctorRegistrationDTO struct {
 	Email           string  `json:"email" validate:"required,email"`
-	Password        string  `json:"password" validate:"required"`
+	Password        string  `json:"password" validate:"required,min=8,max=72"`
 	FirstName       string  `json:"first_name" validate:"required"`
 	LastName        string  `json:"last_name" validate:"required"`
 	MiddleName      *string `json:"middle_name,omitempty"`
-	PhoneNumber     string  `json:"phone_number" validate:"required"`
-	Gender          string  `json:"gender" validate:"required"`
+	PhoneNumber     string  `json:"phone_number" validate:"required,min=10,max=15"`
+	Gender          string  `json:"gender" validate:"required,oneof=male female other"`
 	Specialization  string  `json:"specialization" validate:"required"`
 	Bio             *string `json:"bio"`
 	ExperienceYears *int    `json:"experience_years"`
